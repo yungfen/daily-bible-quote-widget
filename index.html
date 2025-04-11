@@ -7,6 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         :root {
             --bg-color: #F5F1E8;
@@ -292,6 +293,26 @@
             --font-chinese: 'Noto Serif TC', serif;
         }
 
+        .quote-capture {
+            position: fixed;
+            left: -9999px;
+            background: var(--container-bg);
+            padding: 2rem;
+            border-radius: 1rem;
+            width: 600px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .quote-capture .quote {
+            font-size: 1.5rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .quote-capture .reference {
+            font-size: 1.2rem;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -380,6 +401,10 @@
         </div>
     </div>
     <div class="toast" id="toast">Verse copied to clipboard!</div>
+    <div class="quote-capture" id="quoteCapture">
+        <div class="quote" id="captureQuoteEn"></div>
+        <div class="reference" id="captureReferenceEn"></div>
+    </div>
     <script>
         // List of carefully selected verses for inspiration
         const verseList = [
@@ -567,21 +592,63 @@
             shareMenu.classList.toggle('show');
         });
 
-        // Share to Instagram
-        function shareToInstagram() {
-            console.log('Share button clicked'); // Debug log
-
+        // Share to Instagram with image
+        async function shareToInstagram() {
+            // Get the quote and reference
             const quoteEn = document.getElementById('quoteEn').textContent;
             const referenceEn = document.getElementById('referenceEn').textContent;
-            const text = `${quoteEn}\n- ${referenceEn}`;
-            
-            // Create URL for Instagram story
-            const url = `https://www.instagram.com/create/story?text=${encodeURIComponent(text)}`;
-            console.log('Opening URL:', url); // Debug log
 
-            // Open in new window
-            window.open(url, '_blank');
+            // Update capture area
+            document.getElementById('captureQuoteEn').textContent = quoteEn;
+            document.getElementById('captureReferenceEn').textContent = referenceEn;
             
+            try {
+                // Capture the quote as an image
+                const captureElement = document.getElementById('quoteCapture');
+                const canvas = await html2canvas(captureElement, {
+                    scale: 2, // Higher resolution
+                    backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--container-bg'),
+                    logging: false,
+                    useCORS: true,
+                    allowTaint: true
+                });
+
+                // Convert to blob
+                canvas.toBlob(async (blob) => {
+                    try {
+                        // Create file from blob
+                        const file = new File([blob], 'quote.png', { type: 'image/png' });
+                        
+                        // Share using Web Share API if available
+                        if (navigator.share) {
+                            await navigator.share({
+                                files: [file],
+                                title: 'Daily Bible Quote',
+                                text: `${quoteEn}\n- ${referenceEn}`
+                            });
+                        } else {
+                            // Fallback: Download the image
+                            const link = document.createElement('a');
+                            link.download = 'daily-bible-quote.png';
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                            showToast('Image downloaded successfully');
+                        }
+                    } catch (error) {
+                        console.error('Error sharing:', error);
+                        // Fallback to downloading if sharing fails
+                        const link = document.createElement('a');
+                        link.download = 'daily-bible-quote.png';
+                        link.href = canvas.toDataURL('image/png');
+                        link.click();
+                        showToast('Image downloaded successfully');
+                    }
+                }, 'image/png');
+            } catch (error) {
+                console.error('Error capturing image:', error);
+                showToast('Error creating image');
+            }
+
             // Hide share menu
             shareMenu.classList.remove('show');
         }
