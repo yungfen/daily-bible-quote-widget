@@ -8,6 +8,34 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg-color: #F5F1E8;
+            --container-bg: #FDFBF7;
+            --text-color: #4A4036;
+            --quote-color: #695D4F;
+            --reference-color: #8B7355;
+            --date-color: #A69B8D;
+            --divider-color: #D4C5B1;
+            --button-bg: #8B7355;
+            --button-text: #FFFFFF;
+            --button-hover: #695D4F;
+            --section-bg: rgba(255, 255, 255, 0.5);
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #2C2824;
+            --container-bg: #3A342F;
+            --text-color: #E5DFD6;
+            --quote-color: #D4C5B1;
+            --reference-color: #B8A99A;
+            --date-color: #8B7355;
+            --divider-color: #695D4F;
+            --button-bg: #8B7355;
+            --button-text: #FFFFFF;
+            --button-hover: #A69B8D;
+            --section-bg: rgba(0, 0, 0, 0.1);
+        }
+
         body {
             font-family: 'Lato', sans-serif;
             display: flex;
@@ -15,12 +43,14 @@
             align-items: center;
             min-height: 100%;
             margin: 0;
-            background-color: #F5F1E8;
-            color: #4A4036;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             padding: 1rem;
+            transition: background-color 0.3s ease;
         }
+
         .container {
-            background-color: #FDFBF7;
+            background-color: var(--container-bg);
             padding: 1.5rem;
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(121, 108, 93, 0.1);
@@ -28,62 +58,142 @@
             max-width: 90%;
             width: 800px;
             border: 1px solid rgba(121, 108, 93, 0.1);
+            transition: background-color 0.3s ease;
         }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 4px;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background-color: var(--button-hover);
+        }
+
+        .button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
         .quotes-container {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 1rem;
             margin: 0.75rem 0;
         }
+
         .quote-section {
             text-align: left;
             padding: 0.75rem;
             border-radius: 4px;
-            background-color: rgba(255, 255, 255, 0.5);
+            background-color: var(--section-bg);
+            position: relative;
+            transition: background-color 0.3s ease;
         }
+
+        .quote-section .copy-button {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .quote-section:hover .copy-button {
+            opacity: 1;
+        }
+
         .quote {
             font-family: 'Cormorant Garamond', serif;
             font-size: 1.2rem;
             line-height: 1.4;
             margin: 0.5rem 0;
             font-style: italic;
-            color: #695D4F;
+            color: var(--quote-color);
         }
+
         .quote.chinese {
             font-family: 'Noto Serif TC', serif;
             font-style: normal;
         }
+
         .reference {
             font-family: 'Cormorant Garamond', serif;
             font-weight: 600;
-            color: #8B7355;
+            color: var(--reference-color);
             margin-top: 0.5rem;
             font-size: 1rem;
             letter-spacing: 0.5px;
         }
+
         .reference.chinese {
             font-family: 'Noto Serif TC', serif;
         }
+
         .date {
-            color: #A69B8D;
+            color: var(--date-color);
             font-size: 0.9rem;
             margin-bottom: 1rem;
             font-weight: 300;
             letter-spacing: 1px;
             text-transform: uppercase;
         }
+
         .divider {
             width: 60px;
             height: 1px;
-            background: linear-gradient(to right, transparent, #D4C5B1, transparent);
+            background: linear-gradient(to right, transparent, var(--divider-color), transparent);
             margin: 1rem auto;
         }
+
         #loading {
-            color: #A69B8D;
+            color: var(--date-color);
             font-style: italic;
             grid-column: 1 / -1;
             text-align: center;
         }
+
+        .toast {
+            position: fixed;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -98,25 +208,45 @@
             .quote-section {
                 padding: 0.5rem;
             }
+            .quote-section .copy-button {
+                opacity: 1;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="date" id="currentDate"></div>
+        <div class="header">
+            <div class="date" id="currentDate"></div>
+            <div class="controls">
+                <button class="button" id="refreshButton" title="Refresh verse">
+                    <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                </button>
+                <button class="button" id="themeButton" title="Toggle theme">
+                    <svg viewBox="0 0 24 24" id="themeIcon"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+                </button>
+            </div>
+        </div>
         <div class="divider"></div>
         <div class="quotes-container">
             <div class="quote-section">
                 <div class="quote" id="quoteEn"></div>
                 <div class="reference" id="referenceEn"></div>
+                <button class="button copy-button" title="Copy English verse">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
             </div>
             <div class="quote-section">
                 <div class="quote chinese" id="quoteZh"></div>
                 <div class="reference chinese" id="referenceZh"></div>
+                <button class="button copy-button" title="Copy Chinese verse">
+                    <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+                </button>
             </div>
             <div id="loading" style="display: none;">Loading today's verse...</div>
         </div>
     </div>
+    <div class="toast" id="toast">Verse copied to clipboard!</div>
     <script>
         // List of carefully selected verses for inspiration
         const verseList = [
@@ -125,6 +255,49 @@
             'JOS.1.9', 'HEB.11.1', 'ROM.12.2', '2CO.5.7', 'GAL.5.22-23',
             'EPH.2.8-9', 'PHI.4.6-7', 'COL.3.23', '1JN.4.19', 'PSA.119.105'
         ];
+
+        // Theme handling
+        const themeButton = document.getElementById('themeButton');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        function setTheme(isDark) {
+            document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+            updateThemeIcon(isDark);
+        }
+
+        function updateThemeIcon(isDark) {
+            themeIcon.innerHTML = isDark 
+                ? '<path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/>'
+                : '<path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/>';
+        }
+
+        // Initialize theme
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme === 'dark');
+
+        themeButton.addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            setTheme(!isDark);
+        });
+
+        // Toast notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2000);
+        }
+
+        // Copy functionality
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('Verse copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                showToast('Failed to copy verse');
+            });
+        }
 
         async function fetchVerse(verseId) {
             try {
@@ -194,7 +367,24 @@
             // Update Chinese version
             document.getElementById('quoteZh').textContent = `「${verse.chinese.quote}」`;
             document.getElementById('referenceZh').textContent = verse.chinese.reference;
+
+            // Set up copy buttons
+            const enSection = document.querySelector('.quote-section:first-child');
+            const zhSection = document.querySelector('.quote-section:last-child');
+
+            enSection.querySelector('.copy-button').onclick = () => {
+                copyToClipboard(`${verse.english.quote} - ${verse.english.reference}`);
+            };
+
+            zhSection.querySelector('.copy-button').onclick = () => {
+                copyToClipboard(`${verse.chinese.quote} - ${verse.chinese.reference}`);
+            };
         }
+
+        // Refresh button handler
+        document.getElementById('refreshButton').addEventListener('click', () => {
+            displayQuote();
+        });
 
         // Initialize
         updateDate();
