@@ -560,13 +560,14 @@
             });
         });
 
-        // Share menu toggle
+        // Share button toggle
         shareButton.addEventListener('click', (e) => {
             e.stopPropagation();
+            fontSelector.classList.remove('show'); // Close font selector if open
             shareMenu.classList.toggle('show');
-            fontSelector.classList.remove('show');
         });
 
+        // Share to Instagram
         function shareToInstagram() {
             console.log('Share button clicked'); // Debug log
 
@@ -574,7 +575,7 @@
             const referenceEn = document.getElementById('referenceEn').textContent;
             const text = `${quoteEn}\n- ${referenceEn}`;
             
-            // Create a simple URL for Instagram
+            // Create URL for Instagram story
             const url = `https://www.instagram.com/create/story?text=${encodeURIComponent(text)}`;
             console.log('Opening URL:', url); // Debug log
 
@@ -587,15 +588,7 @@
 
         // Share button click handler
         const shareInstagramButton = document.getElementById('shareInstagram');
-        if (shareInstagramButton) {
-            console.log('Share button found'); // Debug log
-            shareInstagramButton.addEventListener('click', () => {
-                console.log('Share button clicked through event listener'); // Debug log
-                shareToInstagram();
-            });
-        } else {
-            console.error('Share button not found!'); // Debug log
-        }
+        shareInstagramButton.addEventListener('click', shareToInstagram);
 
         // Close menus when clicking outside
         document.addEventListener('click', (e) => {
