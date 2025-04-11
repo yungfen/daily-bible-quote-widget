@@ -568,20 +568,22 @@
             const referenceEn = document.getElementById('referenceEn').textContent;
             const text = `${quoteEn}\n- ${referenceEn}`;
             
-            // Encode the text properly for Instagram story URL
-            const encodedText = encodeURIComponent(text);
-            const instagramUrl = `instagram-stories://share?source_application=daily-bible-quote&text=${encodedText}`;
+            // Try opening in Instagram app first
+            const instagramAppUrl = `instagram-stories://share?source_application=daily-bible-quote&text=${encodeURIComponent(text)}`;
+            const instagramWebUrl = `https://www.instagram.com/create/story?text=${encodeURIComponent(text)}`;
 
-            // Try to open Instagram stories
-            window.location.href = instagramUrl;
+            // Try app URL first
+            window.location.href = instagramAppUrl;
 
-            // Set a timeout to check if Instagram was opened
+            // If app doesn't open after 500ms, try web URL
             setTimeout(() => {
-                // If we're still here after 500ms, Instagram probably didn't open
                 if (document.hasFocus()) {
-                    showToast('Please install Instagram app to share stories');
+                    window.open(instagramWebUrl, '_blank');
                 }
             }, 500);
+
+            // Hide share menu
+            shareMenu.classList.remove('show');
         }
 
         document.getElementById('shareInstagram').addEventListener('click', shareToInstagram);
