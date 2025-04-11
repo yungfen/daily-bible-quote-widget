@@ -59,6 +59,10 @@ Thumbs.db
 
 # Local Netlify folder
 .netlify/
+public/
+
+# Deployment files
+windsurf_deployment.yaml
 
 # Distribution / packaging
 .Python
