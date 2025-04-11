@@ -6,7 +6,7 @@
     <title>Daily Bible Quote</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #F5F1E8;
@@ -20,6 +20,9 @@
             --button-text: #FFFFFF;
             --button-hover: #695D4F;
             --section-bg: rgba(255, 255, 255, 0.5);
+            --font-serif: 'Cormorant Garamond', serif;
+            --font-sans: 'Lato', sans-serif;
+            --font-chinese: 'Noto Serif TC', serif;
         }
 
         [data-theme="dark"] {
@@ -37,7 +40,7 @@
         }
 
         body {
-            font-family: 'Lato', sans-serif;
+            font-family: var(--font-sans);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -127,7 +130,7 @@
         }
 
         .quote {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: var(--font-serif);
             font-size: 1.2rem;
             line-height: 1.4;
             margin: 0.5rem 0;
@@ -136,12 +139,12 @@
         }
 
         .quote.chinese {
-            font-family: 'Noto Serif TC', serif;
+            font-family: var(--font-chinese);
             font-style: normal;
         }
 
         .reference {
-            font-family: 'Cormorant Garamond', serif;
+            font-family: var(--font-serif);
             font-weight: 600;
             color: var(--reference-color);
             margin-top: 0.5rem;
@@ -150,7 +153,7 @@
         }
 
         .reference.chinese {
-            font-family: 'Noto Serif TC', serif;
+            font-family: var(--font-chinese);
         }
 
         .date {
@@ -194,6 +197,83 @@
             opacity: 1;
         }
 
+        .font-selector {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background-color: var(--container-bg);
+            border-radius: 4px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 10;
+        }
+
+        .font-selector.show {
+            display: block;
+        }
+
+        .font-option {
+            display: block;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .font-option:hover {
+            background-color: var(--section-bg);
+        }
+
+        .font-option.active {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+        }
+
+        .share-menu {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: var(--container-bg);
+            border-radius: 4px;
+            padding: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: none;
+            z-index: 10;
+        }
+
+        .share-menu.show {
+            display: block;
+        }
+
+        .share-option {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            white-space: nowrap;
+            color: var(--text-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .share-option:hover {
+            background-color: var(--section-bg);
+        }
+
+        .share-option svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Font styles */
+        .font-cormorant { font-family: 'Cormorant Garamond', serif; }
+        .font-crimson { font-family: 'Crimson Pro', serif; }
+        .font-eb-garamond { font-family: 'EB Garamond', serif; }
+        .font-merriweather { font-family: 'Merriweather', serif; }
+        .font-playfair { font-family: 'Playfair Display', serif; }
+
         @media (max-width: 768px) {
             .container {
                 padding: 1rem;
@@ -222,6 +302,12 @@
                 <button class="button" id="refreshButton" title="Refresh verse">
                     <svg viewBox="0 0 24 24"><path d="M17.65 6.35A7.958 7.958 0 0012 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08A5.99 5.99 0 0112 18c-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 </button>
+                <button class="button" id="fontButton" title="Change font">
+                    <svg viewBox="0 0 24 24"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
+                </button>
+                <button class="button" id="shareButton" title="Share verse">
+                    <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                </button>
                 <button class="button" id="themeButton" title="Toggle theme">
                     <svg viewBox="0 0 24 24" id="themeIcon"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
                 </button>
@@ -230,8 +316,8 @@
         <div class="divider"></div>
         <div class="quotes-container">
             <div class="quote-section">
-                <div class="quote" id="quoteEn"></div>
-                <div class="reference" id="referenceEn"></div>
+                <div class="quote font-cormorant" id="quoteEn"></div>
+                <div class="reference font-cormorant" id="referenceEn"></div>
                 <button class="button copy-button" title="Copy English verse">
                     <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                 </button>
@@ -244,6 +330,19 @@
                 </button>
             </div>
             <div id="loading" style="display: none;">Loading today's verse...</div>
+        </div>
+    </div>
+    <div class="font-selector" id="fontSelector">
+        <div class="font-option font-cormorant" data-font="cormorant">Cormorant Garamond</div>
+        <div class="font-option font-crimson" data-font="crimson">Crimson Pro</div>
+        <div class="font-option font-eb-garamond" data-font="eb-garamond">EB Garamond</div>
+        <div class="font-option font-merriweather" data-font="merriweather">Merriweather</div>
+        <div class="font-option font-playfair" data-font="playfair">Playfair Display</div>
+    </div>
+    <div class="share-menu" id="shareMenu">
+        <div class="share-option" id="shareInstagram">
+            <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+            Share to Instagram Story
         </div>
     </div>
     <div class="toast" id="toast">Verse copied to clipboard!</div>
@@ -384,6 +483,89 @@
         // Refresh button handler
         document.getElementById('refreshButton').addEventListener('click', () => {
             displayQuote();
+        });
+
+        // Font handling
+        const fontButton = document.getElementById('fontButton');
+        const fontSelector = document.getElementById('fontSelector');
+        const shareButton = document.getElementById('shareButton');
+        const shareMenu = document.getElementById('shareMenu');
+        
+        // Initialize font
+        const savedFont = localStorage.getItem('font') || 'cormorant';
+        setFont(savedFont);
+
+        function setFont(fontName) {
+            const quotes = document.querySelectorAll('.quote:not(.chinese)');
+            const refs = document.querySelectorAll('.reference:not(.chinese)');
+            
+            // Remove all font classes
+            const fontClasses = ['font-cormorant', 'font-crimson', 'font-eb-garamond', 'font-merriweather', 'font-playfair'];
+            quotes.forEach(quote => {
+                quote.classList.remove(...fontClasses);
+                quote.classList.add(`font-${fontName}`);
+            });
+            refs.forEach(ref => {
+                ref.classList.remove(...fontClasses);
+                ref.classList.add(`font-${fontName}`);
+            });
+
+            // Update active state in font selector
+            document.querySelectorAll('.font-option').forEach(option => {
+                option.classList.toggle('active', option.dataset.font === fontName);
+            });
+
+            localStorage.setItem('font', fontName);
+        }
+
+        // Font selector toggle
+        fontButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            fontSelector.classList.toggle('show');
+            shareMenu.classList.remove('show');
+        });
+
+        // Font selection
+        document.querySelectorAll('.font-option').forEach(option => {
+            option.addEventListener('click', () => {
+                setFont(option.dataset.font);
+                fontSelector.classList.remove('show');
+            });
+        });
+
+        // Share menu toggle
+        shareButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            shareMenu.classList.toggle('show');
+            fontSelector.classList.remove('show');
+        });
+
+        // Share to Instagram Story
+        document.getElementById('shareInstagram').addEventListener('click', async () => {
+            const verse = document.getElementById('quoteEn').textContent;
+            const reference = document.getElementById('referenceEn').textContent;
+            
+            // Create Instagram story URL
+            const text = encodeURIComponent(`${verse}\n\n${reference}`);
+            const instagramUrl = `instagram://story?text=${text}`;
+            
+            try {
+                // Try to open Instagram
+                window.location.href = instagramUrl;
+                shareMenu.classList.remove('show');
+            } catch (error) {
+                showToast('Could not open Instagram. Is it installed?');
+            }
+        });
+
+        // Close menus when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!fontSelector.contains(e.target) && e.target !== fontButton) {
+                fontSelector.classList.remove('show');
+            }
+            if (!shareMenu.contains(e.target) && e.target !== shareButton) {
+                shareMenu.classList.remove('show');
+            }
         });
 
         // Initialize
