@@ -563,23 +563,28 @@
             fontSelector.classList.remove('show');
         });
 
-        // Share to Instagram Story
-        document.getElementById('shareInstagram').addEventListener('click', async () => {
-            const verse = document.getElementById('quoteEn').textContent;
-            const reference = document.getElementById('referenceEn').textContent;
+        function shareToInstagram() {
+            const quoteEn = document.getElementById('quoteEn').textContent;
+            const referenceEn = document.getElementById('referenceEn').textContent;
+            const text = `${quoteEn}\n- ${referenceEn}`;
             
-            // Create Instagram story URL
-            const text = encodeURIComponent(`${verse}\n\n${reference}`);
-            const instagramUrl = `instagram://story?text=${text}`;
-            
-            try {
-                // Try to open Instagram
-                window.location.href = instagramUrl;
-                shareMenu.classList.remove('show');
-            } catch (error) {
-                showToast('Could not open Instagram. Is it installed?');
-            }
-        });
+            // Encode the text properly for Instagram story URL
+            const encodedText = encodeURIComponent(text);
+            const instagramUrl = `instagram-stories://share?source_application=daily-bible-quote&text=${encodedText}`;
+
+            // Try to open Instagram stories
+            window.location.href = instagramUrl;
+
+            // Set a timeout to check if Instagram was opened
+            setTimeout(() => {
+                // If we're still here after 500ms, Instagram probably didn't open
+                if (document.hasFocus()) {
+                    showToast('Please install Instagram app to share stories');
+                }
+            }, 500);
+        }
+
+        document.getElementById('shareInstagram').addEventListener('click', shareToInstagram);
 
         // Close menus when clicking outside
         document.addEventListener('click', (e) => {
