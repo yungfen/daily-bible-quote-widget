@@ -129,54 +129,27 @@
         async function fetchVerse(verseId) {
             try {
                 document.getElementById('loading').style.display = 'block';
-                const response = await fetch(`/api/key`);
-                const keyData = await response.json();
                 
-                if (keyData.error) {
-                    throw new Error('Failed to get API key');
+                const response = await fetch(`/.netlify/functions/get-bible-verse?verseId=${verseId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to fetch verse');
                 }
 
-                const API_KEY = keyData.apiKey;
-                const BIBLE_ID_EN = '9879dbb7cfe39e4d-01'; // KJV version
-                const BIBLE_ID_ZH = 'c0bd4f0457c6-02'; // Chinese Union Version
-
-                // Fetch both English and Chinese versions
-                const [englishResponse, chineseResponse] = await Promise.all([
-                    fetch(
-                        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}`,
-                        {
-                            headers: {
-                                'api-key': API_KEY
-                            }
-                        }
-                    ),
-                    fetch(
-                        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}`,
-                        {
-                            headers: {
-                                'api-key': API_KEY
-                            }
-                        }
-                    )
-                ]);
-
-                if (!englishResponse.ok || !chineseResponse.ok) {
-                    throw new Error('Failed to fetch verses');
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error);
                 }
-
-                const [englishData, chineseData] = await Promise.all([
-                    englishResponse.json(),
-                    chineseResponse.json()
-                ]);
 
                 return {
                     english: {
-                        quote: englishData.data.content.replace(/<[^>]*>/g, ''),
-                        reference: englishData.data.reference
+                        quote: data.english.quote,
+                        reference: data.english.reference
                     },
                     chinese: {
-                        quote: chineseData.data.content.replace(/<[^>]*>/g, ''),
-                        reference: chineseData.data.reference
+                        quote: data.chinese.quote,
+                        reference: data.chinese.reference
                     }
                 };
             } catch (error) {
