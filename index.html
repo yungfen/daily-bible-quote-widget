@@ -564,29 +564,34 @@
         });
 
         function shareToInstagram() {
+            console.log('Share button clicked'); // Debug log
+
             const quoteEn = document.getElementById('quoteEn').textContent;
             const referenceEn = document.getElementById('referenceEn').textContent;
             const text = `${quoteEn}\n- ${referenceEn}`;
             
-            // Try opening in Instagram app first
-            const instagramAppUrl = `instagram-stories://share?source_application=daily-bible-quote&text=${encodeURIComponent(text)}`;
-            const instagramWebUrl = `https://www.instagram.com/create/story?text=${encodeURIComponent(text)}`;
+            // Create a simple URL for Instagram
+            const url = `https://www.instagram.com/create/story?text=${encodeURIComponent(text)}`;
+            console.log('Opening URL:', url); // Debug log
 
-            // Try app URL first
-            window.location.href = instagramAppUrl;
-
-            // If app doesn't open after 500ms, try web URL
-            setTimeout(() => {
-                if (document.hasFocus()) {
-                    window.open(instagramWebUrl, '_blank');
-                }
-            }, 500);
-
+            // Open in new window
+            window.open(url, '_blank');
+            
             // Hide share menu
             shareMenu.classList.remove('show');
         }
 
-        document.getElementById('shareInstagram').addEventListener('click', shareToInstagram);
+        // Share button click handler
+        const shareInstagramButton = document.getElementById('shareInstagram');
+        if (shareInstagramButton) {
+            console.log('Share button found'); // Debug log
+            shareInstagramButton.addEventListener('click', () => {
+                console.log('Share button clicked through event listener'); // Debug log
+                shareToInstagram();
+            });
+        } else {
+            console.error('Share button not found!'); // Debug log
+        }
 
         // Close menus when clicking outside
         document.addEventListener('click', (e) => {
