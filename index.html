@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Bible Quote</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Noto+Serif+TC:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lato', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100%;
+            margin: 0;
+            background-color: #F5F1E8;
+            color: #4A4036;
+            padding: 1rem;
+        }
+        .container {
+            background-color: #FDFBF7;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(121, 108, 93, 0.1);
+            text-align: center;
+            max-width: 90%;
+            width: 800px;
+            border: 1px solid rgba(121, 108, 93, 0.1);
+        }
+        .quotes-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin: 0.75rem 0;
+        }
+        .quote-section {
+            text-align: left;
+            padding: 0.75rem;
+            border-radius: 4px;
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        .quote {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            line-height: 1.4;
+            margin: 0.5rem 0;
+            font-style: italic;
+            color: #695D4F;
+        }
+        .quote.chinese {
+            font-family: 'Noto Serif TC', serif;
+            font-style: normal;
+        }
+        .reference {
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 600;
+            color: #8B7355;
+            margin-top: 0.5rem;
+            font-size: 1rem;
+            letter-spacing: 0.5px;
+        }
+        .reference.chinese {
+            font-family: 'Noto Serif TC', serif;
+        }
+        .date {
+            color: #A69B8D;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #D4C5B1, transparent);
+            margin: 1rem auto;
+        }
+        #loading {
+            color: #A69B8D;
+            font-style: italic;
+            grid-column: 1 / -1;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+            .quotes-container {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            .quote {
+                font-size: 1.1rem;
+            }
+            .quote-section {
+                padding: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="date" id="currentDate"></div>
+        <div class="divider"></div>
+        <div class="quotes-container">
+            <div class="quote-section">
+                <div class="quote" id="quoteEn"></div>
+                <div class="reference" id="referenceEn"></div>
+            </div>
+            <div class="quote-section">
+                <div class="quote chinese" id="quoteZh"></div>
+                <div class="reference chinese" id="referenceZh"></div>
+            </div>
+            <div id="loading" style="display: none;">Loading today's verse...</div>
+        </div>
+    </div>
+    <script>
+        // List of carefully selected verses for inspiration
+        const verseList = [
+            'JER.29.11', 'PSA.23.1', 'PRO.3.5-6', 'PHI.4.13', 'ISA.40.31',
+            'MAT.11.28', 'JHN.3.16', 'ROM.8.28', '1CO.13.13', 'PSA.46.1',
+            'JOS.1.9', 'HEB.11.1', 'ROM.12.2', '2CO.5.7', 'GAL.5.22-23',
+            'EPH.2.8-9', 'PHI.4.6-7', 'COL.3.23', '1JN.4.19', 'PSA.119.105'
+        ];
+
+        async function fetchVerse(verseId) {
+            try {
+                document.getElementById('loading').style.display = 'block';
+                const response = await fetch(`/api/key`);
+                const keyData = await response.json();
+                
+                if (keyData.error) {
+                    throw new Error('Failed to get API key');
+                }
+
+                const API_KEY = keyData.apiKey;
+                const BIBLE_ID_EN = '9879dbb7cfe39e4d-01'; // KJV version
+                const BIBLE_ID_ZH = 'c0bd4f0457c6-02'; // Chinese Union Version
+
+                // Fetch both English and Chinese versions
+                const [englishResponse, chineseResponse] = await Promise.all([
+                    fetch(
+                        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}`,
+                        {
+                            headers: {
+                                'api-key': API_KEY
+                            }
+                        }
+                    ),
+                    fetch(
+                        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}`,
+                        {
+                            headers: {
+                                'api-key': API_KEY
+                            }
+                        }
+                    )
+                ]);
+
+                if (!englishResponse.ok || !chineseResponse.ok) {
+                    throw new Error('Failed to fetch verses');
+                }
+
+                const [englishData, chineseData] = await Promise.all([
+                    englishResponse.json(),
+                    chineseResponse.json()
+                ]);
+
+                return {
+                    english: {
+                        quote: englishData.data.content.replace(/<[^>]*>/g, ''),
+                        reference: englishData.data.reference
+                    },
+                    chinese: {
+                        quote: chineseData.data.content.replace(/<[^>]*>/g, ''),
+                        reference: chineseData.data.reference
+                    }
+                };
+            } catch (error) {
+                console.error('Error fetching verse:', error);
+                // Fallback quote if API fails
+                return {
+                    english: {
+                        quote: "For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope.",
+                        reference: "Jeremiah 29:11"
+                    },
+                    chinese: {
+                        quote: "耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。",
+                        reference: "耶利米書 29:11"
+                    }
+                };
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        function getVerseForToday() {
+            const today = new Date();
+            const dayOfYear = Math.floor((today - new Date(today.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const index = dayOfYear % verseList.length;
+            return verseList[index];
+        }
+
+        function updateDate() {
+            const today = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('currentDate').textContent = today.toLocaleDateString('en-US', options);
+        }
+
+        async function displayQuote() {
+            const verseId = getVerseForToday();
+            const verse = await fetchVerse(verseId);
+            
+            // Update English version
+            document.getElementById('quoteEn').textContent = `"${verse.english.quote}"`;
+            document.getElementById('referenceEn').textContent = verse.english.reference;
+            
+            // Update Chinese version
+            document.getElementById('quoteZh').textContent = `「${verse.chinese.quote}」`;
+            document.getElementById('referenceZh').textContent = verse.chinese.reference;
+        }
+
+        // Initialize
+        updateDate();
+        displayQuote();
+
+        // Update every hour (to avoid hitting API limits too frequently)
+        setInterval(() => {
+            updateDate();
+            displayQuote();
+        }, 3600000); // Every hour
+    </script>
+</body>
+</html>
