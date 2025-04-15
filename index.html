@@ -719,11 +719,11 @@
         updateDate();
         displayQuote();
 
-        // Update every hour (to avoid hitting API limits too frequently)
+        // Update every 24 hours (1 day)
         setInterval(() => {
             updateDate();
             displayQuote();
-        }, 3600000); // Every hour
+        }, 86400000);
     </script>
 </body>
 </html>

@@ -8,6 +8,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 import time
 import threading
+import datetime
 
 # Load environment variables
 load_dotenv()
@@ -19,6 +20,20 @@ if not api_key:
     sys.exit(1)
 else:
     print("API key loaded successfully")
+
+
+# Function to fetch a new Bible verse (replace with your actual logic)
+def fetch_new_verse():
+    # This is a placeholder. You should implement the actual logic
+    # to fetch a new Bible verse using the API and return it as a dictionary.
+    # Example:
+    # return {"verse": "John 3:16", "text": "For God so loved the world..."}
+    # For now, we'll return a dummy verse:
+    return {"verse": "Psalm 23:1", "text": "The Lord is my shepherd; I shall not want."}
+
+# Global variable to store the current verse and date
+current_verse = fetch_new_verse()
+current_date = datetime.date.today()
 
 class SecureHandler(SimpleHTTPRequestHandler):
     def do_GET(self):
@@ -41,6 +56,20 @@ class SecureHandler(SimpleHTTPRequestHandler):
             
             self.wfile.write(json.dumps(response).encode())
             return
+
+        # Handle verse of the day request
+        if parsed_path.path == '/api/verse':
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+
+            # Return the current verse
+            response = {
+                "verse": current_verse['verse'],
+                "text": current_verse['text']
+            }
+            self.wfile.write(json.dumps(response).encode())
         
         # Serve static files
         return SimpleHTTPRequestHandler.do_GET(self)
@@ -72,6 +101,21 @@ class FileChangeHandler(FileSystemEventHandler):
         print("\n Changes detected! Restarting server...")
         self.server.shutdown()
 
+def update_verse_daily():
+    global current_verse, current_date
+    while True:
+        today = datetime.date.today()
+        if today > current_date:
+            print("Updating the Bible verse for the new day.")
+            current_verse = fetch_new_verse()
+            current_date = today
+        # Check every hour if the day has changed
+        time.sleep(3600)  
+
+
+
+
+
 def run_server(port=8000):
     while True:
         server = HTTPServer(('localhost', port), SecureHandler)
@@ -84,6 +128,11 @@ def run_server(port=8000):
         handler = FileChangeHandler(server)
         observer.schedule(handler, path='.', recursive=True)
         observer.start()
+        
+        # Start the daily verse update in a separate thread
+        daily_update_thread = threading.Thread(target=update_verse_daily, daemon=True)
+        daily_update_thread.start()
+
 
         try:
             server.serve_forever()
