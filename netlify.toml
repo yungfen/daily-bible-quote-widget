@@ -6,18 +6,8 @@
   node_bundler = "esbuild"
 
 [dev]
-  publish = "public"
+  publish = "."
   functions = "netlify/functions"
-
-[[redirects]]
-  from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
 
 [[headers]]
   for = "/*"

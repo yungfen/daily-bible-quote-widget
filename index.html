@@ -387,6 +387,133 @@
             text-align: center;
         }
 
+        /* Calendar panel */
+        .calendar-panel {
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            background-color: var(--container-bg);
+            border-radius: 12px;
+            padding: 1rem;
+            box-shadow: var(--shadow-elevated);
+            border: 1px solid var(--divider-color);
+            display: none;
+            z-index: 100;
+            width: 280px;
+            user-select: none;
+        }
+        .calendar-panel.show {
+            display: block;
+            animation: fadeIn 0.15s ease-out;
+        }
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+        .calendar-title {
+            font-family: var(--font-sans);
+            font-size: 0.9rem;
+            font-weight: 400;
+            color: var(--text-color);
+            letter-spacing: 0.5px;
+        }
+        .calendar-nav {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--reference-color);
+            padding: 0.25rem;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.2s;
+        }
+        .calendar-nav:hover {
+            background-color: var(--section-bg);
+        }
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            font-size: 0.65rem;
+            color: var(--date-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.4rem;
+            font-family: var(--font-sans);
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+        }
+        .calendar-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-radius: 8px;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: all 0.15s ease;
+            font-family: var(--font-sans);
+            position: relative;
+        }
+        .calendar-day:hover {
+            background-color: var(--section-bg);
+        }
+        .calendar-day.today {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            font-weight: 700;
+        }
+        .calendar-day.selected {
+            outline: 2px solid var(--button-bg);
+            outline-offset: -2px;
+        }
+        .calendar-day.other-month {
+            color: var(--divider-color);
+        }
+        .calendar-day.future {
+            color: var(--divider-color);
+            cursor: default;
+            pointer-events: none;
+        }
+        .calendar-today-btn {
+            margin-top: 0.6rem;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--reference-color);
+            cursor: pointer;
+            padding: 0.35rem;
+            border-radius: 6px;
+            transition: background-color 0.2s;
+            font-family: var(--font-sans);
+            display: none;
+        }
+        .calendar-today-btn:hover {
+            background-color: var(--section-bg);
+        }
+        .calendar-today-btn.show {
+            display: block;
+        }
+        /* Date indicator when viewing past verse */
+        .date-viewing {
+            display: inline-block;
+            font-size: 0.7rem;
+            background: var(--button-bg);
+            color: var(--button-text);
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+
         /* Theme toggle icon visibility */
         [data-theme="dark"] .moon { display: none; }
         [data-theme="dark"] .sun { display: block; }
@@ -416,6 +543,9 @@
         <div class="header">
             <div class="date" id="currentDate"></div>
             <div class="buttons">
+                <button class="button" id="calendarButton" title="Calendar" aria-label="Calendar">
+                    <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
+                </button>
                 <button class="button" id="refreshButton" title="Refresh verse" aria-label="Refresh verse">
                     <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 </button>
@@ -445,6 +575,22 @@
                         <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
                         下載圖片
                     </div>
+                </div>
+                <div class="calendar-panel" id="calendarPanel">
+                    <div class="calendar-header">
+                        <button class="calendar-nav" id="calPrev" aria-label="Previous month">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" fill="currentColor"/></svg>
+                        </button>
+                        <div class="calendar-title" id="calTitle"></div>
+                        <button class="calendar-nav" id="calNext" aria-label="Next month">
+                            <svg viewBox="0 0 24 24" width="16" height="16"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z" fill="currentColor"/></svg>
+                        </button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+                    </div>
+                    <div class="calendar-grid" id="calGrid"></div>
+                    <div class="calendar-today-btn" id="calTodayBtn">回到今天</div>
                 </div>
             </div>
         </div>
@@ -509,27 +655,28 @@
         ];
 
         // ─── Cache Layer ──────────────────────────────────────
+        // Cache is keyed by verseId so browsing the calendar doesn't
+        // re-fetch the same verse twice in one session.
         const CACHE_KEY = 'bible_verse_cache';
 
-        function getCachedVerse() {
+        function getVerseCache() {
             try {
-                const cached = sessionStorage.getItem(CACHE_KEY);
-                if (!cached) return null;
-                const parsed = JSON.parse(cached);
-                if (parsed.date === new Date().toDateString() && parsed.verseId) {
-                    return parsed;
-                }
-            } catch (e) { /* cache is optional */ }
-            return null;
+                var raw = sessionStorage.getItem(CACHE_KEY);
+                if (!raw) return {};
+                return JSON.parse(raw);
+            } catch (e) { return {}; }
+        }
+
+        function getCachedVerse(verseId) {
+            var cache = getVerseCache();
+            return cache[verseId] || null;
         }
 
         function setCachedVerse(verseId, data) {
             try {
-                sessionStorage.setItem(CACHE_KEY, JSON.stringify({
-                    date: new Date().toDateString(),
-                    verseId,
-                    data
-                }));
+                var cache = getVerseCache();
+                cache[verseId] = data;
+                sessionStorage.setItem(CACHE_KEY, JSON.stringify(cache));
             } catch (e) { /* silently fail */ }
         }
 
@@ -600,9 +747,9 @@
         };
 
         async function fetchVerse(verseId) {
-            const cached = getCachedVerse();
-            if (cached && cached.verseId === verseId) {
-                return cached.data;
+            var cached = getCachedVerse(verseId);
+            if (cached) {
+                return cached;
             }
 
             try {
@@ -652,31 +799,62 @@
         }
 
         // ─── Verse Selection ──────────────────────────────────
-        function getVerseForToday() {
-            const today = new Date();
-            const start = new Date(today.getFullYear(), 0, 0);
-            const dayOfYear = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+        function getVerseForDate(date) {
+            var start = new Date(date.getFullYear(), 0, 0);
+            var dayOfYear = Math.floor((date - start) / (1000 * 60 * 60 * 24));
             return verseList[dayOfYear % verseList.length];
         }
 
+        function getVerseForToday() {
+            return getVerseForDate(new Date());
+        }
+
         // ─── Date Display ─────────────────────────────────────
-        function updateDate() {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+        var viewingDate = null; // null = today
+
+        function updateDate(date) {
+            var d = date || new Date();
+            var options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            var dateEl = document.getElementById('currentDate');
+            dateEl.textContent = d.toLocaleDateString('en-US', options);
+
+            // Show/remove "viewing past" indicator
+            var existingBadge = dateEl.querySelector('.date-viewing');
+            if (existingBadge) existingBadge.remove();
+
+            if (date && !isSameDay(date, new Date())) {
+                var badge = document.createElement('span');
+                badge.className = 'date-viewing';
+                badge.textContent = '\u2190 \u56DE\u4ECA\u5929';
+                badge.addEventListener('click', function() {
+                    viewingDate = null;
+                    updateDate();
+                    displayQuote();
+                    renderCalendar();
+                });
+                dateEl.appendChild(badge);
+            }
+        }
+
+        function isSameDay(a, b) {
+            return a.getFullYear() === b.getFullYear() &&
+                   a.getMonth() === b.getMonth() &&
+                   a.getDate() === b.getDate();
         }
 
         // ─── Display Quote ────────────────────────────────────
         let currentVerse = null;
 
-        async function displayQuote() {
-            const verseId = getVerseForToday();
-            const verse = await fetchVerse(verseId);
+        async function displayQuote(date) {
+            var d = date || new Date();
+            var verseId = getVerseForDate(d);
+            var verse = await fetchVerse(verseId);
             currentVerse = verse;
 
-            const quoteEn = document.getElementById('quoteEn');
-            const quoteZh = document.getElementById('quoteZh');
-            const refEn = document.getElementById('referenceEn');
-            const refZh = document.getElementById('referenceZh');
+            var quoteEn = document.getElementById('quoteEn');
+            var quoteZh = document.getElementById('quoteZh');
+            var refEn = document.getElementById('referenceEn');
+            var refZh = document.getElementById('referenceZh');
 
             quoteEn.textContent = '\u201C' + verse.english.quote + '\u201D';
             refEn.textContent = '\u2014 ' + verse.english.reference;
@@ -684,7 +862,6 @@
             quoteZh.textContent = '\u300C' + verse.chinese.quote + '\u300D';
             refZh.textContent = '\u2014 ' + verse.chinese.reference;
 
-            // Restore class (textContent clears children but not classes, but be safe)
             quoteZh.className = 'quote chinese';
             refZh.className = 'reference chinese';
         }
@@ -711,7 +888,10 @@
             isRefreshing = true;
             refreshButton.classList.add('spinning');
             try { sessionStorage.removeItem(CACHE_KEY); } catch (e) {}
+            viewingDate = null;
+            updateDate();
             await displayQuote();
+            renderCalendar();
             setTimeout(function() {
                 refreshButton.classList.remove('spinning');
                 isRefreshing = false;
@@ -742,6 +922,7 @@
             e.stopPropagation();
             fontSelector.classList.toggle('show');
             shareMenu.classList.remove('show');
+            document.getElementById('calendarPanel').classList.remove('show');
         });
 
         document.querySelectorAll('.font-option').forEach(function(option) {
@@ -759,6 +940,7 @@
             e.stopPropagation();
             fontSelector.classList.remove('show');
             shareMenu.classList.toggle('show');
+            document.getElementById('calendarPanel').classList.remove('show');
         });
 
         async function shareAsImage(useNativeShare) {
@@ -838,6 +1020,11 @@
             if (!shareMenu.contains(e.target) && e.target !== shareButton) {
                 shareMenu.classList.remove('show');
             }
+            var calPanel = document.getElementById('calendarPanel');
+            var calBtn = document.getElementById('calendarButton');
+            if (!calPanel.contains(e.target) && e.target !== calBtn) {
+                calPanel.classList.remove('show');
+            }
         });
 
         // Close menus on Escape
@@ -845,8 +1032,144 @@
             if (e.key === 'Escape') {
                 fontSelector.classList.remove('show');
                 shareMenu.classList.remove('show');
+                document.getElementById('calendarPanel').classList.remove('show');
             }
         });
+
+        // ─── Calendar ─────────────────────────────────────────
+        var calendarButton = document.getElementById('calendarButton');
+        var calendarPanel = document.getElementById('calendarPanel');
+        var calMonth = new Date().getMonth();
+        var calYear = new Date().getFullYear();
+
+        calendarButton.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fontSelector.classList.remove('show');
+            shareMenu.classList.remove('show');
+            calendarPanel.classList.toggle('show');
+            if (calendarPanel.classList.contains('show')) {
+                // Reset to current viewing month
+                var ref = viewingDate || new Date();
+                calMonth = ref.getMonth();
+                calYear = ref.getFullYear();
+                renderCalendar();
+            }
+        });
+
+        document.getElementById('calPrev').addEventListener('click', function(e) {
+            e.stopPropagation();
+            calMonth--;
+            if (calMonth < 0) { calMonth = 11; calYear--; }
+            renderCalendar();
+        });
+
+        document.getElementById('calNext').addEventListener('click', function(e) {
+            e.stopPropagation();
+            calMonth++;
+            if (calMonth > 11) { calMonth = 0; calYear++; }
+            renderCalendar();
+        });
+
+        document.getElementById('calTodayBtn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            viewingDate = null;
+            calMonth = new Date().getMonth();
+            calYear = new Date().getFullYear();
+            updateDate();
+            displayQuote();
+            renderCalendar();
+            calendarPanel.classList.remove('show');
+        });
+
+        function renderCalendar() {
+            var today = new Date();
+            var selected = viewingDate || today;
+            var monthNames = ['January','February','March','April','May','June',
+                              'July','August','September','October','November','December'];
+            var zhMonths = ['一月','二月','三月','四月','五月','六月',
+                            '七月','八月','九月','十月','十一月','十二月'];
+
+            document.getElementById('calTitle').textContent = monthNames[calMonth] + ' ' + calYear + ' ' + zhMonths[calMonth];
+
+            // Prevent navigating to future months
+            var nextBtn = document.getElementById('calNext');
+            if (calYear > today.getFullYear() || (calYear === today.getFullYear() && calMonth >= today.getMonth())) {
+                nextBtn.style.visibility = 'hidden';
+            } else {
+                nextBtn.style.visibility = 'visible';
+            }
+
+            // Show "back to today" button if viewing a different date
+            var todayBtn = document.getElementById('calTodayBtn');
+            if (viewingDate && !isSameDay(viewingDate, today)) {
+                todayBtn.classList.add('show');
+            } else {
+                todayBtn.classList.remove('show');
+            }
+
+            var grid = document.getElementById('calGrid');
+            grid.innerHTML = '';
+
+            var firstDay = new Date(calYear, calMonth, 1).getDay();
+            var daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+            var daysInPrevMonth = new Date(calYear, calMonth, 0).getDate();
+
+            // Previous month trailing days
+            for (var i = firstDay - 1; i >= 0; i--) {
+                var dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day other-month';
+                dayEl.textContent = daysInPrevMonth - i;
+                grid.appendChild(dayEl);
+            }
+
+            // Current month days
+            for (var d = 1; d <= daysInMonth; d++) {
+                var dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day';
+                dayEl.textContent = d;
+
+                var thisDate = new Date(calYear, calMonth, d);
+
+                // Mark future days
+                if (thisDate > today) {
+                    dayEl.classList.add('future');
+                } else {
+                    // Clickable past/present days
+                    (function(date) {
+                        dayEl.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            viewingDate = date;
+                            updateDate(date);
+                            displayQuote(date);
+                            renderCalendar();
+                            calendarPanel.classList.remove('show');
+                        });
+                    })(thisDate);
+                }
+
+                // Highlight today
+                if (isSameDay(thisDate, today)) {
+                    dayEl.classList.add('today');
+                }
+
+                // Highlight selected date
+                if (isSameDay(thisDate, selected)) {
+                    dayEl.classList.add('selected');
+                }
+
+                grid.appendChild(dayEl);
+            }
+
+            // Next month leading days
+            var totalCells = firstDay + daysInMonth;
+            var remaining = (7 - (totalCells % 7)) % 7;
+            for (var i = 1; i <= remaining; i++) {
+                var dayEl = document.createElement('div');
+                dayEl.className = 'calendar-day other-month';
+                dayEl.textContent = i;
+                grid.appendChild(dayEl);
+            }
+        }
 
         // ─── Initialize ──────────────────────────────────────
         updateDate();
