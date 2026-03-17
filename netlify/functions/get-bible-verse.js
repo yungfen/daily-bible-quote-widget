@@ -1,21 +1,38 @@
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
   const API_KEY = process.env.BIBLE_API_KEY;
-  const BIBLE_ID_EN = '9879dbb7cfe39e4d-01'; // KJV version
-  const BIBLE_ID_ZH = 'c0bd4f0457c6-02'; // Chinese Union Version
+  const BIBLE_ID_EN = '9879dbb7cfe39e4d-01'; // KJV
+  const BIBLE_ID_ZH = 'c0bd4f0457c6-02';     // Chinese Union Version (CUV)
 
-  // Enhanced logging for debugging
-  console.log('Received event:', event);
-  console.log('Environment BIBLE_API_KEY exists:', !!API_KEY);
-  console.log('Verse ID:', event.queryStringParameters?.verseId);
+  // ─── CORS headers (shared across all responses) ─────
+  const headers = {
+    'Content-Type': 'application/json',
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
 
-  // Get verse ID from query string
-  const { verseId } = event.queryStringParameters || {};
+  // Handle CORS preflight
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers, body: '' };
+  }
+
+  // ─── Input validation ───────────────────────────────
+  const verseId = (event.queryStringParameters || {}).verseId;
 
   if (!verseId) {
-    console.error('No verseId provided in query parameters.');
     return {
       statusCode: 400,
-      body: JSON.stringify({ error: 'Verse ID is required' })
+      headers,
+      body: JSON.stringify({ error: 'Missing required parameter: verseId' }),
+    };
+  }
+
+  // Basic format validation (e.g., "JER.29.11", "PHP.4.6-7")
+  if (!/^[A-Z0-9]{2,4}\.\d+\.\d+(-\d+)?$/.test(verseId)) {
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: 'Invalid verseId format' }),
     };
   }
 
@@ -23,81 +40,83 @@ exports.handler = async function(event, context) {
     console.error('BIBLE_API_KEY is missing from environment variables.');
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Server misconfiguration: API key missing' })
+      headers,
+      body: JSON.stringify({ error: 'Server configuration error' }),
     };
   }
 
+  // ─── Fallback verse ─────────────────────────────────
+  const fallback = {
+    english: {
+      quote: 'For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope.',
+      reference: 'Jeremiah 29:11',
+    },
+    chinese: {
+      quote: '耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。',
+      reference: '耶利米書 29:11',
+    },
+  };
+
+  // ─── Fetch from API ─────────────────────────────────
   try {
-    // Fetch both English and Chinese versions
-    const [englishResponse, chineseResponse] = await Promise.all([
-      fetch(
-        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}`,
-        {
-          headers: {
-            'api-key': API_KEY
-          }
-        }
-      ),
-      fetch(
-        `https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}`,
-        {
-          headers: {
-            'api-key': API_KEY
-          }
-        }
-      )
+    const fetchOptions = {
+      headers: { 'api-key': API_KEY },
+    };
+
+    const [englishRes, chineseRes] = await Promise.all([
+      fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text`, fetchOptions),
+      fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text`, fetchOptions),
     ]);
 
-    console.log('English response status:', englishResponse.status);
-    console.log('Chinese response status:', chineseResponse.status);
-
-    if (!englishResponse.ok || !chineseResponse.ok) {
-      const errMsg = `Failed to fetch verse: English status ${englishResponse.status}, Chinese status ${chineseResponse.status}`;
-      console.error(errMsg);
-      throw new Error(errMsg);
+    // If either request fails, try to return whatever we can
+    if (!englishRes.ok && !chineseRes.ok) {
+      console.error(`Both requests failed: EN=${englishRes.status}, ZH=${chineseRes.status}`);
+      return {
+        statusCode: 200,
+        headers: { ...headers, 'Cache-Control': 'no-cache' },
+        body: JSON.stringify(fallback),
+      };
     }
 
     const [englishData, chineseData] = await Promise.all([
-      englishResponse.json(),
-      chineseResponse.json()
+      englishRes.ok ? englishRes.json() : null,
+      chineseRes.ok ? chineseRes.json() : null,
     ]);
 
-    console.log('English data:', englishData);
-    console.log('Chinese data:', chineseData);
+    // Clean HTML tags and excess whitespace from content
+    function cleanContent(text) {
+      if (!text) return '';
+      return text
+        .replace(/<[^>]*>/g, '')        // strip HTML tags
+        .replace(/&[a-z]+;/gi, ' ')     // strip HTML entities
+        .replace(/\s+/g, ' ')           // collapse whitespace
+        .trim();
+    }
+
+    const result = {
+      english: englishData
+        ? { quote: cleanContent(englishData.data.content), reference: englishData.data.reference }
+        : fallback.english,
+      chinese: chineseData
+        ? { quote: cleanContent(chineseData.data.content), reference: chineseData.data.reference }
+        : fallback.chinese,
+    };
 
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
+        ...headers,
+        // Cache for 1 hour — verses don't change, saves API quota
+        'Cache-Control': 'public, max-age=3600, s-maxage=3600',
       },
-      body: JSON.stringify({
-        english: {
-          quote: englishData.data.content.replace(/<[^>]*>/g, ''),
-          reference: englishData.data.reference
-        },
-        chinese: {
-          quote: chineseData.data.content.replace(/<[^>]*>/g, ''),
-          reference: chineseData.data.reference
-        }
-      })
+      body: JSON.stringify(result),
     };
   } catch (error) {
-    console.error('Error fetching Bible verse:', error);
+    console.error('Error fetching Bible verse:', error.message || error);
     return {
-      statusCode: 500,
-      body: JSON.stringify({ 
-        error: 'Failed to fetch verse',
-        details: error.message,
-        english: {
-          quote: "For I know the plans I have for you, declares the Lord, plans for welfare and not for evil, to give you a future and a hope.",
-          reference: "Jeremiah 29:11"
-        },
-        chinese: {
-          quote: "耶和華說：我知道我向你們所懷的意念是賜平安的意念，不是降災禍的意念，要叫你們末後有指望。",
-          reference: "耶利米書 29:11"
-        }
-      })
+      statusCode: 200,
+      headers: { ...headers, 'Cache-Control': 'no-cache' },
+      body: JSON.stringify(fallback),
     };
   }
 };

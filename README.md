@@ -1,49 +1,62 @@
 # Daily Bible Quote Widget for Notion
 
-A beautiful, responsive widget that displays daily Bible verses in both English (KJV) and Traditional Chinese (CUV).
+A bilingual widget that displays daily Bible verses in English (KJV) and Traditional Chinese (CUV), designed to embed in Notion pages.
 
 ## Features
 
-- 🌟 Daily rotating Bible verses
-- 🌏 Bilingual support (English KJV and Traditional Chinese CUV)
-- 🎨 Beautiful, minimalist design
-- 📱 Fully responsive layout
-- ⚡ Fast loading and lightweight
-- 🔄 Auto-updates every hour
-- 🔒 Secure API key handling
+- Daily rotating Bible verses (30 curated verses)
+- Bilingual: English KJV + Traditional Chinese CUV (和合本)
+- Light / Dark theme toggle
+- 5 font style options
+- Copy individual verses to clipboard
+- Share as image (native share or download PNG)
+- Responsive layout (side-by-side on desktop, stacked on mobile)
+- Session caching to reduce API calls
+- Auto-updates at midnight
 
-## How to Embed in Notion
+## Embed in Notion
 
 1. Open your Notion page
-2. Type `/embed` and select "Embed"
-3. Paste this URL: `https://daily-bible-quote-widget.windsurf.build`
-4. Click "Embed link"
+2. Type `/embed` and select **Embed**
+3. Paste your deployed URL
+4. Click **Embed link**
 
-The widget will automatically fit your Notion page width and display both English and Chinese translations side by side (or stacked on mobile devices).
+## Setup
 
-## Technical Details
+### Prerequisites
 
-- Uses the Bible API (api.bible) with generous free tier limits (5000 calls/day)
-- Updates once per hour to conserve API calls
-- Hosted on Netlify's free tier
-- Secure server-side API key handling
-- No tracking or analytics
+- A free API key from [api.bible](https://scripture.api.bible/)
+- A [Netlify](https://netlify.com) account (free tier works fine)
 
-## Customization
+### Deploy
 
-If you'd like to customize this widget or host your own version:
+1. Fork this repository
+2. Connect the repo to Netlify
+3. In Netlify dashboard → **Site settings** → **Environment variables**, add:
+   ```
+   BIBLE_API_KEY=your_api_key_here
+   ```
+4. Deploy — that's it!
 
-1. Fork the repository
-2. Get your own API key from [api.bible](https://scripture.api.bible/)
-3. Deploy to Netlify or your preferred hosting service
-4. Set your API key in the environment variables
+### Local Development
 
-## Credits
+```bash
+cp .env.example .env
+# Edit .env and add your API key
+npx netlify dev
+```
 
-- Bible translations provided by [api.bible](https://scripture.api.bible/)
-- KJV (King James Version)
-- CUV (Chinese Union Version)
+## Tech Stack
 
-## Support
+- Vanilla HTML / CSS / JS (no build step)
+- Netlify Functions (serverless, Node.js)
+- [api.bible](https://scripture.api.bible/) for verse data
+- [html2canvas](https://html2canvas.hertzen.com/) for image sharing
 
-For issues or feature requests, please contact the maintainer.
+## API Usage
+
+The Bible API free tier allows 5,000 calls/day. This widget uses ~2 calls per unique verse load (1 English + 1 Chinese), and caches responses in the browser session and via HTTP `Cache-Control` headers.
+
+## License
+
+MIT
