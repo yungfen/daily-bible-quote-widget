@@ -6,7 +6,7 @@
     <title>Daily Bible Quote</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400&family=Merriweather:ital,wght@0,400;0,700;1,400&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
     <style>
         :root {
@@ -330,10 +330,10 @@
 
         /* Font style pairs */
         .font-classic { --font-serif: 'Cormorant Garamond', serif; --font-chinese: 'Noto Serif TC', serif; }
-        .font-modern { --font-serif: 'Playfair Display', serif; --font-chinese: 'Noto Serif TC', serif; }
+        .font-modern { --font-serif: 'Playfair Display', serif; --font-chinese: 'Noto Sans TC', sans-serif; }
         .font-elegant { --font-serif: 'EB Garamond', serif; --font-chinese: 'Noto Serif TC', serif; }
         .font-traditional { --font-serif: 'Crimson Pro', serif; --font-chinese: 'Noto Serif TC', serif; }
-        .font-formal { --font-serif: 'Merriweather', serif; --font-chinese: 'Noto Serif TC', serif; }
+        .font-formal { --font-serif: 'Merriweather', serif; --font-chinese: 'Noto Sans TC', sans-serif; }
 
         /* Quote capture (offscreen for image generation) */
         .quote-capture {
@@ -341,18 +341,50 @@
             left: -9999px;
             top: -9999px;
             background: var(--container-bg);
-            padding: 2.5rem;
+            padding: 3rem;
             border-radius: 1rem;
-            width: 600px;
+            width: 1080px;
+            font-family: var(--font-sans);
         }
-        .quote-capture .quote { font-size: 1.5rem; line-height: 1.7; margin-bottom: 1rem; }
-        .quote-capture .reference { font-size: 1.1rem; }
+        .quote-capture .capture-section {
+            margin-bottom: 2rem;
+        }
+        .quote-capture .capture-section:last-of-type {
+            margin-bottom: 0;
+        }
+        .quote-capture .capture-label {
+            font-size: 0.8rem;
+            color: var(--date-color);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 0.75rem;
+        }
+        .quote-capture .capture-divider {
+            width: 60px;
+            height: 1px;
+            background: var(--divider-color);
+            margin: 2rem auto;
+        }
+        .quote-capture .quote {
+            font-size: 1.8rem;
+            line-height: 1.7;
+            margin-bottom: 0.75rem;
+        }
+        .quote-capture .quote.chinese {
+            font-family: var(--font-chinese);
+            font-style: normal;
+            font-size: 1.6rem;
+            line-height: 1.9;
+        }
+        .quote-capture .reference { font-size: 1.2rem; }
+        .quote-capture .reference.chinese { font-family: var(--font-chinese); }
         .quote-capture .watermark {
-            margin-top: 1.5rem;
-            font-size: 0.7rem;
+            margin-top: 2rem;
+            font-size: 0.75rem;
             color: var(--date-color);
             letter-spacing: 1px;
             text-transform: uppercase;
+            text-align: center;
         }
 
         /* Theme toggle icon visibility */
@@ -405,13 +437,13 @@
                     <div class="font-option" data-font="formal"><span class="en">Formal</span><span class="zh">正式</span></div>
                 </div>
                 <div class="share-menu" id="shareMenu">
-                    <div class="share-option" id="shareInstagram">
-                        <svg viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
-                        Share to Instagram
+                    <div class="share-option" id="shareNative">
+                        <svg viewBox="0 0 24 24"><path d="M16 5l-1.42 1.42-1.59-1.59V16h-1.98V4.83L9.42 6.42 8 5l4-4 4 4zm4 5v11c0 1.1-.9 2-2 2H6c-1.11 0-2-.9-2-2V10c0-1.11.89-2 2-2h3v2H6v11h12V10h-3V8h3c1.1 0 2 .89 2 2z"/></svg>
+                        分享圖片
                     </div>
                     <div class="share-option" id="shareDownload">
                         <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
-                        Download Image
+                        下載圖片
                     </div>
                 </div>
             </div>
@@ -451,9 +483,18 @@
     <div class="toast" id="toast"></div>
 
     <div class="quote-capture" id="quoteCapture">
-        <div class="quote" id="captureQuoteEn"></div>
-        <div class="reference" id="captureReferenceEn"></div>
-        <div class="watermark">Daily Bible Quote</div>
+        <div class="capture-section">
+            <div class="capture-label">English · KJV</div>
+            <div class="quote" id="captureQuoteEn"></div>
+            <div class="reference" id="captureReferenceEn"></div>
+        </div>
+        <div class="capture-divider"></div>
+        <div class="capture-section">
+            <div class="capture-label">中文 · 和合本</div>
+            <div class="quote chinese" id="captureQuoteZh"></div>
+            <div class="reference chinese" id="captureReferenceZh"></div>
+        </div>
+        <div class="watermark">Daily Bible Quote ✦ 每日聖經金句</div>
     </div>
 
     <script>
@@ -723,46 +764,62 @@
         async function shareAsImage(useNativeShare) {
             if (!currentVerse) return;
 
+            // Update capture area with both languages
             document.getElementById('captureQuoteEn').textContent = '\u201C' + currentVerse.english.quote + '\u201D';
             document.getElementById('captureReferenceEn').textContent = '\u2014 ' + currentVerse.english.reference;
+            document.getElementById('captureQuoteZh').textContent = '\u300C' + currentVerse.chinese.quote + '\u300D';
+            document.getElementById('captureReferenceZh').textContent = '\u2014 ' + currentVerse.chinese.reference;
 
             try {
                 var captureElement = document.getElementById('quoteCapture');
                 var bgColor = getComputedStyle(document.documentElement).getPropertyValue('--container-bg').trim();
                 var canvas = await html2canvas(captureElement, {
-                    scale: 2,
+                    scale: 3,
                     backgroundColor: bgColor,
                     logging: false,
                     useCORS: true,
                     allowTaint: true
                 });
 
-                var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
-
-                if (useNativeShare && navigator.share && navigator.canShare) {
-                    var file = new File([blob], 'daily-bible-quote.png', { type: 'image/png' });
-                    var shareData = {
-                        files: [file],
-                        title: 'Daily Bible Quote',
-                        text: currentVerse.english.quote + '\n\u2014 ' + currentVerse.english.reference
-                    };
-                    if (navigator.canShare(shareData)) {
-                        await navigator.share(shareData);
+                if (useNativeShare) {
+                    // Check if native share with files is supported
+                    if (navigator.share && navigator.canShare) {
+                        var blob = await new Promise(function(resolve) { canvas.toBlob(resolve, 'image/png'); });
+                        var file = new File([blob], 'daily-bible-quote.png', { type: 'image/png' });
+                        var shareData = {
+                            files: [file],
+                            title: 'Daily Bible Quote',
+                            text: currentVerse.english.quote + '\n\u2014 ' + currentVerse.english.reference
+                        };
+                        if (navigator.canShare(shareData)) {
+                            await navigator.share(shareData);
+                        } else {
+                            // Device doesn't support file sharing, fall back to download
+                            downloadCanvas(canvas);
+                        }
                     } else {
+                        // No native share API (desktop browser), just download
                         downloadCanvas(canvas);
                     }
                 } else {
                     downloadCanvas(canvas);
                 }
             } catch (error) {
-                console.error('Error creating share image:', error);
-                showToast('Failed to create image');
+                // AbortError means user cancelled the share dialog — not an error
+                if (error.name !== 'AbortError') {
+                    console.error('Error creating share image:', error);
+                    downloadCanvas(null);
+                }
             }
 
             shareMenu.classList.remove('show');
         }
 
         function downloadCanvas(canvas) {
+            if (!canvas) {
+                showToast('Share not supported, try Download instead');
+                return;
+            }
             var link = document.createElement('a');
             link.download = 'daily-bible-quote.png';
             link.href = canvas.toDataURL('image/png');
@@ -770,7 +827,7 @@
             showToast('Image downloaded \u2713');
         }
 
-        document.getElementById('shareInstagram').addEventListener('click', function() { shareAsImage(true); });
+        document.getElementById('shareNative').addEventListener('click', function() { shareAsImage(true); });
         document.getElementById('shareDownload').addEventListener('click', function() { shareAsImage(false); });
 
         // Close menus on outside click
