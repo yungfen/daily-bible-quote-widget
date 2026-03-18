@@ -1,7 +1,7 @@
 exports.handler = async function (event, context) {
   const API_KEY = process.env.BIBLE_API_KEY;
-  const BIBLE_ID_EN = '9879dbb7cfe39e4d-01'; // KJV
-  const BIBLE_ID_ZH = 'c0bd4f0457c6-02';     // Chinese Union Version (CUV)
+  const BIBLE_ID_EN = 'de4e12af7f28f599-01'; // KJV (King James Version)
+  const BIBLE_ID_ZH = 'a6e06d2c5b90ad89-01'; // Chinese Contemporary Bible Traditional (當代譯本)
 
   // ─── CORS headers (shared across all responses) ─────
   const headers = {
@@ -64,8 +64,8 @@ exports.handler = async function (event, context) {
     };
 
     const [englishRes, chineseRes] = await Promise.all([
-      fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text`, fetchOptions),
-      fetch(`https://api.scripture.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text`, fetchOptions),
     ]);
 
     // If either request fails, try to return whatever we can
@@ -74,7 +74,7 @@ exports.handler = async function (event, context) {
       return {
         statusCode: 200,
         headers: { ...headers, 'Cache-Control': 'no-cache' },
-        body: JSON.stringify(fallback),
+        body: JSON.stringify({ ...fallback, isFallback: true }),
       };
     }
 
@@ -116,7 +116,7 @@ exports.handler = async function (event, context) {
     return {
       statusCode: 200,
       headers: { ...headers, 'Cache-Control': 'no-cache' },
-      body: JSON.stringify(fallback),
+      body: JSON.stringify({ ...fallback, isFallback: true }),
     };
   }
 };
