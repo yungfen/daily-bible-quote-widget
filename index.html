@@ -611,7 +611,7 @@
                 </button>
             </div>
             <div class="quote-section" id="sectionZh">
-                <div class="lang-label">&#20013;&#25991; &middot; &#21644;&#21512;&#26412;</div>
+                <div class="lang-label">&#20013;&#25991; &middot; &#30070;&#20195;&#35695;&#26412;</div>
                 <div class="quote chinese" id="quoteZh">
                     <div class="skeleton line-1"></div>
                     <div class="skeleton line-2"></div>
@@ -636,7 +636,7 @@
         </div>
         <div class="capture-divider"></div>
         <div class="capture-section">
-            <div class="capture-label">中文 · 和合本</div>
+            <div class="capture-label">中文 · 當代譯本</div>
             <div class="quote chinese" id="captureQuoteZh"></div>
             <div class="reference chinese" id="captureReferenceZh"></div>
         </div>
@@ -766,6 +766,12 @@
 
                 const data = await response.json();
 
+                // Detect fallback from server
+                if (data.isFallback) {
+                    showToast('\u26A0 API \u9023\u7DDA\u5931\u6557\uFF0C\u986F\u793A\u9810\u8A2D\u7D93\u6587');
+                    return { english: data.english, chinese: data.chinese };
+                }
+
                 // Handle error response that includes fallback data
                 if (data.error) {
                     if (data.english && data.chinese) {
@@ -785,6 +791,7 @@
                 return result;
             } catch (error) {
                 console.error('Error fetching verse:', error.message);
+                showToast('\u26A0 \u7121\u6CD5\u53D6\u5F97\u7D93\u6587\uFF0C\u986F\u793A\u9810\u8A2D\u7D93\u6587');
                 return FALLBACK_VERSE;
             }
         }
