@@ -64,8 +64,8 @@ exports.handler = async function (event, context) {
     };
 
     const [englishRes, chineseRes] = await Promise.all([
-      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text`, fetchOptions),
-      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
     ]);
 
     // If either request fails, try to return whatever we can
