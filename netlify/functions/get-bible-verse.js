@@ -27,13 +27,21 @@ exports.handler = async function (event, context) {
     };
   }
 
-  // Basic format validation (e.g., "JER.29.11", "PHP.4.6-7")
-  if (!/^[A-Z0-9]{2,4}\.\d+\.\d+(-\d+)?$/.test(verseId)) {
+  // Basic format validation (e.g., "JER.29.11", "PHP.4.6-7", "PSA.91.1-PSA.91.2")
+  if (!/^[A-Z0-9]{2,4}\.\d+\.\d+(-([A-Z0-9]{2,4}\.\d+\.)?\d+)?$/.test(verseId)) {
     return {
       statusCode: 400,
       headers,
       body: JSON.stringify({ error: 'Invalid verseId format' }),
     };
+  }
+
+  // Convert short range format to full format for the new API
+  // e.g., "PSA.91.1-2" → "PSA.91.1-PSA.91.2"
+  let apiVerseId = verseId;
+  const rangeMatch = verseId.match(/^([A-Z0-9]{2,4}\.\d+\.)(\d+)-(\d+)$/);
+  if (rangeMatch) {
+    apiVerseId = `${rangeMatch[1]}${rangeMatch[2]}-${rangeMatch[1]}${rangeMatch[3]}`;
   }
 
   if (!API_KEY) {
@@ -64,8 +72,8 @@ exports.handler = async function (event, context) {
     };
 
     const [englishRes, chineseRes] = await Promise.all([
-      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${verseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
-      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${verseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_EN}/verses/${apiVerseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
+      fetch(`https://rest.api.bible/v1/bibles/${BIBLE_ID_ZH}/verses/${apiVerseId}?content-type=text&include-titles=false&include-chapter-numbers=false&include-verse-numbers=false`, fetchOptions),
     ]);
 
     // If either request fails, try to return whatever we can
