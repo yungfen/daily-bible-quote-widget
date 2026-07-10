@@ -32,3 +32,23 @@
 .wp-mood{padding:.3rem .65rem;background:var(--section-bg);border:1px solid var(--divider-color);border-radius:999px;cursor:pointer;color:var(--date-color);font-size:.72rem;transition:background-color .2s,color .2s}
 .wp-mood:hover{color:var(--text-color)}
 .wp-mood.active{background:var(--reference-color);border-color:var(--reference-color);color:#fff}
+
+/* Button tooltips (visible on hover/keyboard focus) */
+.button[data-tip]{position:relative}
+.button[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%) scale(.94);background:var(--text-color);color:var(--container-bg);font-size:.68rem;letter-spacing:.5px;line-height:1;padding:.38rem .55rem;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .15s,transform .15s;z-index:150}
+.button[data-tip]:hover::after,.button[data-tip]:focus-visible::after{opacity:1;transform:translateX(-50%) scale(1);transition-delay:.25s}
+.copy-button[data-tip]::after{top:auto;bottom:calc(100% + 7px)}
+
+/* Coach-marks tutorial */
+.coach-layer{position:fixed;inset:0;z-index:4000;display:none}
+.coach-layer.show{display:block}
+.coach-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);transition:all .3s ease;pointer-events:none}
+.coach-bubble{position:absolute;max-width:270px;background:var(--container-bg);color:var(--text-color);border:1px solid var(--divider-color);border-radius:12px;box-shadow:var(--shadow-elevated);padding:.85rem .95rem;transition:all .3s ease}
+.coach-bubble .coach-step{font-size:.62rem;color:var(--date-color);letter-spacing:1px;margin-bottom:.3rem}
+.coach-bubble .coach-title{font-size:.9rem;font-weight:600;margin-bottom:.25rem}
+.coach-bubble .coach-text{font-size:.75rem;color:var(--reference-color);line-height:1.5}
+.coach-bubble .coach-nav{display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;gap:.5rem}
+.coach-bubble .coach-skip{background:none;border:none;color:var(--date-color);font-size:.72rem;cursor:pointer;padding:.3rem .2rem}
+.coach-bubble .coach-skip:hover{color:var(--text-color)}
+.coach-bubble .coach-next{background:var(--reference-color);color:#fff;border:none;border-radius:8px;font-size:.75rem;padding:.42rem .9rem;cursor:pointer}
+.coach-bubble .coach-next:hover{filter:brightness(1.08)}

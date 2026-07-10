@@ -22,24 +22,27 @@
         <div class="header">
             <div class="date" id="currentDate"></div>
             <div class="buttons">
-                <button class="button" id="calendarButton" title="Calendar" aria-label="Calendar">
+                <button class="button" id="calendarButton" data-tip="日曆・過去經文" title="Calendar" aria-label="Calendar">
                     <svg viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11zM9 10H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2z"/></svg>
                 </button>
-                <button class="button" id="refreshButton" title="Refresh verse" aria-label="Refresh verse">
+                <button class="button" id="refreshButton" data-tip="重新整理" title="Refresh verse" aria-label="Refresh verse">
                     <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
                 </button>
-                <button class="button" id="fontButton" title="Change font" aria-label="Change font">
+                <button class="button" id="fontButton" data-tip="字體風格" title="Change font" aria-label="Change font">
                     <svg viewBox="0 0 24 24"><path d="M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z"/></svg>
                 </button>
-                <button class="button" id="shareButton" title="Share verse" aria-label="Share verse">
+                <button class="button" id="shareButton" data-tip="分享圖片" title="Share verse" aria-label="Share verse">
                     <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/></svg>
                 </button>
-                <button class="button" id="wallpaperButton" title="Make wallpaper" aria-label="Make wallpaper">
+                <button class="button" id="wallpaperButton" data-tip="製作桌布" title="Make wallpaper" aria-label="Make wallpaper">
                     <svg viewBox="0 0 24 24"><path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM8.5 12.5l2.5 3.01L14.5 11l4.5 6H5l3.5-4.5z"/></svg>
                 </button>
-                <button class="button" id="themeButton" title="Toggle theme" aria-label="Toggle theme">
+                <button class="button" id="themeButton" data-tip="深淺主題" title="Toggle theme" aria-label="Toggle theme">
                     <svg class="moon" viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
                     <svg class="sun" viewBox="0 0 24 24"><path d="M6.76 4.84l-1.8-1.79-1.41 1.41 1.79 1.79zM4 10.5H1v2h3zm9-9.95h-2V3.5h2zm7.45 3.91l-1.41-1.41-1.79 1.79 1.41 1.41zm-3.21 13.7l1.79 1.8 1.41-1.41-1.8-1.79zM20 10.5v2h3v-2zm-8-5c-3.31 0-6 2.69-6 6s2.69 6 6 6 6-2.69 6-6-2.69-6-6-6zm-1 16.95h2V19.5h-2zm-7.45-3.91l1.41 1.41 1.79-1.8-1.41-1.41z"/></svg>
+                </button>
+                <button class="button" id="helpButton" data-tip="使用教學" title="Tutorial" aria-label="Tutorial">
+                    <svg viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/></svg>
                 </button>
                 <div class="font-selector" id="fontSelector">
                     <div class="font-option" data-font="classic"><span class="en">Classic</span><span class="zh">經典</span></div>
@@ -92,7 +95,7 @@
                 <div class="lang-label">English &middot; KJV</div>
                 <div class="quote" id="quoteEn"><div class="skeleton line-1"></div><div class="skeleton line-2"></div></div>
                 <div class="reference" id="referenceEn"><div class="skeleton line-3"></div></div>
-                <button class="button copy-button" title="Copy English verse" aria-label="Copy English verse">
+                <button class="button copy-button" data-tip="複製英文經文" title="Copy English verse" aria-label="Copy English verse">
                     <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                 </button>
             </div>
@@ -100,7 +103,7 @@
                 <div class="lang-label">&#20013;&#25991; &middot; &#30070;&#20195;&#35695;&#26412;</div>
                 <div class="quote chinese" id="quoteZh"><div class="skeleton line-1"></div><div class="skeleton line-2"></div></div>
                 <div class="reference chinese" id="referenceZh"><div class="skeleton line-3"></div></div>
-                <button class="button copy-button" title="Copy Chinese verse" aria-label="Copy Chinese verse">
+                <button class="button copy-button" data-tip="複製中文經文" title="Copy Chinese verse" aria-label="Copy Chinese verse">
                     <svg viewBox="0 0 24 24"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
                 </button>
             </div>
