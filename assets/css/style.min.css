@@ -45,8 +45,10 @@
 .coach-spot{position:absolute;border-radius:12px;box-shadow:0 0 0 200vmax rgba(0,0,0,.58);transition:all .3s ease;pointer-events:none}
 .coach-bubble{position:absolute;max-width:270px;background:var(--container-bg);color:var(--text-color);border:1px solid var(--divider-color);border-radius:12px;box-shadow:var(--shadow-elevated);padding:.85rem .95rem;transition:all .3s ease}
 .coach-bubble .coach-step{font-size:.62rem;color:var(--date-color);letter-spacing:1px;margin-bottom:.3rem}
-.coach-bubble .coach-title{font-size:.9rem;font-weight:600;margin-bottom:.25rem}
-.coach-bubble .coach-text{font-size:.75rem;color:var(--reference-color);line-height:1.5}
+.coach-bubble .coach-title{font-size:.9rem;font-weight:600}
+.coach-bubble .coach-title-en{font-size:.68rem;color:var(--date-color);text-transform:uppercase;letter-spacing:1px;margin:.1rem 0 .35rem}
+.coach-bubble .coach-text{font-size:.75rem;color:var(--text-color);line-height:1.5}
+.coach-bubble .coach-text-en{font-size:.7rem;color:var(--reference-color);line-height:1.45;margin-top:.3rem}
 .coach-bubble .coach-nav{display:flex;justify-content:space-between;align-items:center;margin-top:.7rem;gap:.5rem}
 .coach-bubble .coach-skip{background:none;border:none;color:var(--date-color);font-size:.72rem;cursor:pointer;padding:.3rem .2rem}
 .coach-bubble .coach-skip:hover{color:var(--text-color)}
