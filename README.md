@@ -10,6 +10,8 @@ A bilingual widget that displays daily Bible verses in English (KJV) and Traditi
 - 5 font style options
 - Copy individual verses to clipboard
 - Share as image sized for Instagram Stories (9:16) or feed posts (1:1)
+- Download the verse as a phone / tablet / laptop wallpaper over a CC-licensed Unsplash photo
+- Wallpaper backgrounds match the verse's theme (per-verse keywords), with a mood picker (寧靜 / 自然 / 天空 / 光 / 山岳) to override
 - Responsive layout (side-by-side on desktop, stacked on mobile)
 - Persistent caching (localStorage) to reduce API calls
 - Auto-updates at midnight
@@ -45,6 +47,33 @@ native app required.
    ```
 4. Deploy — that's it!
 
+#### Optional: wallpaper backgrounds (Unsplash)
+
+The wallpaper feature works out of the box with an elegant gradient background.
+To use real photos, register a free app at
+[Unsplash Developers](https://unsplash.com/developers) and add its **Access Key**:
+
+```
+UNSPLASH_ACCESS_KEY=your_unsplash_access_key
+```
+
+Following Unsplash's [API guidelines](https://help.unsplash.com/en/articles/2511256-guideline-high-quality-authentic-experiences),
+photos are hotlinked, the photographer is credited with a link, and the
+download endpoint is triggered whenever a wallpaper is saved.
+
+#### API abuse protection
+
+Both Netlify functions only accept browser requests from this site itself
+(production and deploy previews) and reject requests originating from other
+websites, so third parties can't burn your API quota by calling your
+endpoints from their pages. Requests without an `Origin`/`Referer` header
+(e.g. the Scriptable widget) still work. If you serve the widget from an
+extra domain, list it in an optional env var:
+
+```
+ALLOWED_ORIGINS=https://your-other-domain.com,https://another.example
+```
+
 ### Local Development
 
 ```bash
@@ -58,7 +87,8 @@ npx netlify dev
 - Vanilla HTML / CSS / JS (no build step)
 - Netlify Functions (serverless, Node.js)
 - [api.bible](https://scripture.api.bible/) for verse data
-- [html2canvas](https://html2canvas.hertzen.com/) for image sharing
+- [Unsplash API](https://unsplash.com/developers) for wallpaper backgrounds (optional)
+- [html2canvas](https://html2canvas.hertzen.com/) for image sharing; Canvas 2D for wallpapers
 
 ## API Usage
 

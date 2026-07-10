@@ -1,15 +1,45 @@
+// Only browsers on this site (any deploy of it) — or origins listed in the
+// optional ALLOWED_ORIGINS env var — may call this proxy. Requests without an
+// Origin/Referer (e.g. the Scriptable widget) are allowed; the gate exists to
+// stop other websites from burning this site's API quota.
+function isAllowedOrigin(event, value) {
+  const m = /^https?:\/\/([^/]+)/.exec(value || '');
+  if (!m) return false;
+  const oHost = m[1].toLowerCase();
+  if (oHost === (event.headers.host || '').toLowerCase()) return true;
+  return (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, ''))
+    .filter(Boolean)
+    .includes(oHost);
+}
+
+function originGate(event) {
+  const origin = event.headers.origin;
+  const referer = event.headers.referer;
+  const checked = origin || referer;
+  if (checked && !isAllowedOrigin(event, checked)) return null; // foreign site → block
+  return origin && isAllowedOrigin(event, origin) ? origin : '';
+}
+
 exports.handler = async function (event, context) {
   const API_KEY = process.env.BIBLE_API_KEY;
   const BIBLE_ID_EN = 'de4e12af7f28f599-01'; // KJV (King James Version)
   const BIBLE_ID_ZH = 'a6e06d2c5b90ad89-01'; // Chinese Contemporary Bible Traditional (當代譯本)
 
+  const allowedOrigin = originGate(event);
+  if (allowedOrigin === null) {
+    return { statusCode: 403, body: JSON.stringify({ error: 'Forbidden' }) };
+  }
+
   // ─── CORS headers (shared across all responses) ─────
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
   };
+  if (allowedOrigin) headers['Access-Control-Allow-Origin'] = allowedOrigin;
 
   // Handle CORS preflight
   if (event.httpMethod === 'OPTIONS') {
