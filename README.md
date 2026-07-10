@@ -11,7 +11,7 @@ A bilingual widget that displays daily Bible verses in English (KJV) and Traditi
 - Copy individual verses to clipboard
 - Share as image (native share or download PNG)
 - Responsive layout (side-by-side on desktop, stacked on mobile)
-- Session caching to reduce API calls
+- Persistent caching (localStorage) to reduce API calls
 - Auto-updates at midnight
 
 ## Embed in Notion
