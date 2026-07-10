@@ -26,3 +26,9 @@
 .wp-btn.primary{background:var(--reference-color);color:#fff;border-color:var(--reference-color)}
 .wp-btn.primary:hover{filter:brightness(1.08)}
 .wp-btn:disabled{opacity:.5;cursor:default}
+
+/* Wallpaper mood picker */
+.wp-moods{display:flex;flex-wrap:wrap;gap:.3rem;margin:.6rem 1.1rem 0;justify-content:center}
+.wp-mood{padding:.3rem .65rem;background:var(--section-bg);border:1px solid var(--divider-color);border-radius:999px;cursor:pointer;color:var(--date-color);font-size:.72rem;transition:background-color .2s,color .2s}
+.wp-mood:hover{color:var(--text-color)}
+.wp-mood.active{background:var(--reference-color);border-color:var(--reference-color);color:#fff}

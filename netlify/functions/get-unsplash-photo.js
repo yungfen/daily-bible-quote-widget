@@ -6,15 +6,45 @@
 
 const UTM = 'utm_source=daily_bible_quote&utm_medium=referral';
 
+// Only browsers on this site (any deploy of it) — or origins listed in the
+// optional ALLOWED_ORIGINS env var — may call this proxy. Requests without an
+// Origin/Referer (e.g. the Scriptable widget) are allowed; the gate exists to
+// stop other websites from burning this site's API quota.
+function isAllowedOrigin(event, value) {
+  const m = /^https?:\/\/([^/]+)/.exec(value || '');
+  if (!m) return false;
+  const oHost = m[1].toLowerCase();
+  if (oHost === (event.headers.host || '').toLowerCase()) return true;
+  return (process.env.ALLOWED_ORIGINS || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, ''))
+    .filter(Boolean)
+    .includes(oHost);
+}
+
+function originGate(event) {
+  const origin = event.headers.origin;
+  const referer = event.headers.referer;
+  const checked = origin || referer;
+  if (checked && !isAllowedOrigin(event, checked)) return null; // foreign site → block
+  return origin && isAllowedOrigin(event, origin) ? origin : '';
+}
+
 exports.handler = async function (event) {
   const ACCESS_KEY = process.env.UNSPLASH_ACCESS_KEY;
 
+  const allowedOrigin = originGate(event);
+  if (allowedOrigin === null) {
+    return { statusCode: 403, body: JSON.stringify({ error: 'Forbidden' }) };
+  }
+
   const headers = {
     'Content-Type': 'application/json',
-    'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
+    Vary: 'Origin',
   };
+  if (allowedOrigin) headers['Access-Control-Allow-Origin'] = allowedOrigin;
 
   if (event.httpMethod === 'OPTIONS') {
     return { statusCode: 204, headers, body: '' };
@@ -52,9 +82,15 @@ exports.handler = async function (event) {
 
     // ─── Fetch a random photo for the requested orientation ───
     const orientation = params.orientation === 'landscape' ? 'landscape' : 'portrait';
+    // Optional theme query from the client (per-verse theme or user mood).
+    // Sanitized to plain keywords; anything else falls back to the default.
+    let query = 'landscape,nature,minimal,sky';
+    if (params.query && /^[a-zA-Z][a-zA-Z ,-]{0,79}$/.test(params.query)) {
+      query = params.query;
+    }
     const url = 'https://api.unsplash.com/photos/random'
       + `?orientation=${orientation}`
-      + '&query=landscape,nature,minimal,sky'
+      + `&query=${encodeURIComponent(query)}`
       + '&content_filter=high';
 
     const res = await fetch(url, { headers: { Authorization: `Client-ID ${ACCESS_KEY}` } });
