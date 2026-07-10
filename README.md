@@ -9,10 +9,17 @@ A bilingual widget that displays daily Bible verses in English (KJV) and Traditi
 - Light / Dark theme toggle
 - 5 font style options
 - Copy individual verses to clipboard
-- Share as image (native share or download PNG)
+- Share as image sized for Instagram Stories (9:16) or feed posts (1:1)
 - Responsive layout (side-by-side on desktop, stacked on mobile)
 - Session caching to reduce API calls
 - Auto-updates at midnight
+
+## iPhone Home-Screen Widget
+
+Want the daily verse on your iPhone home screen? See
+[`scriptable/README.md`](scriptable/README.md) — it uses the free
+[Scriptable](https://scriptable.app) app to show the same verse of the day, no
+native app required.
 
 ## Embed in Notion
 
