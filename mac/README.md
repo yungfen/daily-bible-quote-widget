@@ -4,13 +4,15 @@
 照片上，設成桌布。不用 Xcode 專案、不用開發者帳號、不上架。經文與網站、
 Scriptable widget 同一天一定相同，因為打的是同一組 Netlify function。
 
-這個資料夾有三個檔案：
+這個資料夾的檔案：
 
 | 檔案 | 用途 |
 |---|---|
 | `daily-bible-wallpaper.swift` | 主程式：抓經文、抓照片、合成、設桌布、發通知 |
-| `DailyBibleWallpaper.platypus` | Platypus 設定檔，載入後一鍵產生 `.app` |
+| `DailyBibleWallpaper.platypus` | Platypus 設定檔：無視窗版，點兩下換一張 |
+| `DailyBibleWallpaperMenu.platypus` + `menu.sh` | Platypus 設定檔：選單列版，右上角 ✝ 下拉選心情 |
 | `install-daily.sh` | 裝一個 launchd 排程，每天固定時間自動執行 |
+| `icon/` | App icon（PNG 與 icns），拖進 Platypus 的 icon 欄位 |
 
 ## 需求
 
@@ -61,6 +63,16 @@ swift mac/daily-bible-wallpaper.swift random      # 隨機挑一種心情
 | Run in background | 勾 |
 | Remain running after execution | 不勾 |
 | 其他（Accept dropped files、Prompt for file…） | 全部不勾 |
+
+### 想要選單列版本
+
+用 `mac/DailyBibleWallpaperMenu.platypus` 取代上面的設定檔，其他步驟相同。做出來的
+App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布（依經文）」與五種心情、
+「隨機心情」，點一下就換。手動設定的話：Interface 選 **Status Menu**、Script Path
+指到 `mac/menu.sh`（Script Type 選 Shell）、**Bundled Files** 加入
+`mac/daily-bible-wallpaper.swift`、勾 Remain running after execution。
+
+兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
 
 ## 第三步：每天自動換
 
