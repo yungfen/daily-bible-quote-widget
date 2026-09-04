@@ -475,6 +475,10 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
       ? "<a href=\"\(htmlEsc(c[9]))\"><img loading=\"lazy\" src=\"\(htmlEsc(c[9]))\" alt=\"\"></a>"
       : "<div class=\"missing\">（圖檔已刪除）</div>"
     let qs = (reflections[c[1]] ?? []).map { "<li>\(htmlEsc($0))</li>" }.joined()
+    let fileAttr = htmlEsc(c[9])
+    let linksBlock = exists
+      ? "<p class=\"links\"><a href=\"\(fileAttr)\" download>下載桌布</a><a href=\"\(fileAttr)\" target=\"_blank\">打開原圖</a></p>"
+      : ""
     let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
     cards.append("""
     <article>
@@ -485,7 +489,7 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
         <p class="en">“\(htmlEsc(c[5]))”</p>
         \(qBlock)
         <p class="credit">\(credit)<span>・\(htmlEsc(c[6]))</span></p>
-        \(exists ? "<p class=\"links\"><a href=\"\(htmlEsc(c[9]))\" download>下載桌布</a><a href=\"\(htmlEsc(c[9]))\" target=\"_blank\">打開原圖</a></p>" : "")
+        \(linksBlock)
       </div>
     </article>
     """)
