@@ -47,7 +47,7 @@ print_verse_lines() {
   fi
   # Parse + wrap with the built-in JavaScript runtime (no Swift compile here).
   VERSE_CACHE="$cache" /usr/bin/osascript -l JavaScript <<'JS' 2>/dev/null
-function run(argv) {
+function buildVerseLines() {
   ObjC.import("Foundation");
   var path = ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey("VERSE_CACHE"));
   var raw = $.NSString.stringWithContentsOfFileEncodingError(path, 4, null);
@@ -62,7 +62,7 @@ function run(argv) {
   wrapEn("“" + clean(d.english.quote) + "”", 44).forEach(function (l) { lines.push("DISABLED|" + l); });
   return lines.join("\n");
 }
-run([]);
+buildVerseLines();
 JS
 }
 
