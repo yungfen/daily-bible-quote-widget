@@ -80,11 +80,12 @@ if [ $# -eq 0 ]; then
   exit 0
 fi
 
+# notify_start TITLE TEXT — Platypus format is "NOTIFICATION:title|text".
 if [ "$USE_PLATYPUS_NOTIFY" = "1" ]; then
   export DBW_NOTIFY=platypus
-  notify_start() { echo "NOTIFICATION:$1"; }
+  notify_start() { echo "NOTIFICATION:$1|$2"; }
 else
-  notify_start() { /usr/bin/osascript -e "display notification \"$1\" with title \"Daily Bible Wallpaper\"" >/dev/null 2>&1; }
+  notify_start() { /usr/bin/osascript -e "display notification \"$2\" with title \"$1\"" >/dev/null 2>&1; }
 fi
 
 case "$1" in
@@ -101,6 +102,6 @@ esac
 # Immediate feedback: Platypus shows nothing while a menu item's script runs,
 # and the Swift script takes several seconds (compile + network). Say what is
 # happening at once, so a click never looks like it did nothing.
-notify_start "正在換桌布：${LABEL}，約 10 秒…"
+notify_start "換桌布中" "${LABEL}，約 10 秒…"
 
 exec /usr/bin/swift "$SWIFT_SCRIPT" "$MOOD"
