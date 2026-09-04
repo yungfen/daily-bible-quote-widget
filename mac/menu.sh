@@ -2,7 +2,7 @@
 # Status-menu wrapper for Platypus ("Status Menu" interface).
 #
 # Platypus runs this script with NO arguments every time the menu is opened:
-# every line printed becomes a menu item ("DISABLED|text" = greyed-out line,
+# every line printed becomes a menu item ("text" = greyed-out line,
 # "----" = separator). When the user picks an item, Platypus runs the script
 # again with the item's text as $1. The Swift script lives next to this file
 # inside the .app (Contents/Resources).
@@ -42,7 +42,7 @@ print_verse_lines() {
     fi
   fi
   if [ ! -s "$cache" ]; then
-    echo "DISABLED|（離線，經文稍後再試）"
+    echo "（離線，經文稍後再試）"
     return
   fi
   # Parse + wrap with the built-in JavaScript runtime (no Swift compile here).
@@ -51,15 +51,15 @@ function buildVerseLines() {
   ObjC.import("Foundation");
   var path = ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey("VERSE_CACHE"));
   var raw = $.NSString.stringWithContentsOfFileEncodingError(path, 4, null);
-  var d; try { d = JSON.parse(ObjC.unwrap(raw)); } catch (e) { return "DISABLED|（經文格式錯誤）"; }
-  if (!d || !d.english || !d.chinese) return "DISABLED|（經文暫時無法取得）";
+  var d; try { d = JSON.parse(ObjC.unwrap(raw)); } catch (e) { return "（經文格式錯誤）"; }
+  if (!d || !d.english || !d.chinese) return "（經文暫時無法取得）";
   var clean = function (t) { return String(t || "").replace(/<[^>]*>/g, "").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim(); };
   var wrapCjk = function (t, n) { var out = []; for (var i = 0; i < t.length; i += n) out.push(t.slice(i, i + n)); return out; };
   var wrapEn = function (t, n) { var out = [], line = ""; t.split(" ").forEach(function (w) { if (line && (line + " " + w).length > n) { out.push(line); line = w; } else line = line ? line + " " + w : w; }); if (line) out.push(line); return out; };
   var lines = [];
-  lines.push("DISABLED|" + d.chinese.reference + " · " + d.english.reference);
-  wrapCjk("「" + clean(d.chinese.quote) + "」", 18).forEach(function (l) { lines.push("DISABLED|" + l); });
-  wrapEn("“" + clean(d.english.quote) + "”", 44).forEach(function (l) { lines.push("DISABLED|" + l); });
+  lines.push("" + d.chinese.reference + " · " + d.english.reference);
+  wrapCjk("「" + clean(d.chinese.quote) + "」", 18).forEach(function (l) { lines.push("" + l); });
+  wrapEn("“" + clean(d.english.quote) + "”", 44).forEach(function (l) { lines.push("" + l); });
   return lines.join("\n");
 }
 buildVerseLines();
