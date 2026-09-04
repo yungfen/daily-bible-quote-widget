@@ -99,7 +99,7 @@ Platypus 建出來的 App 只是一個資料夾，腳本放在 `Contents/Resourc
 ```bash
 cd daily-bible-quote-widget
 cp mac/menu.sh "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
-cp mac/daily-bible-wallpaper.swift "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
+cp mac/daily-bible-wallpaper.swift mac/reflections.json "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
 chmod +x "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
 ```
 
@@ -141,8 +141,16 @@ SCRIPT="$PWD/mac/daily-bible-wallpaper.swift" bash mac/install-daily.sh
 - **字型。** 有安裝 Noto Serif TC 與 Cormorant Garamond 的話會與網站同款；沒裝
   就用系統的宋體（Songti TC）與 New York。想要同款可到 Google Fonts 下載安裝，
   不用改程式。
-- **檔案放在哪。** `~/Library/Application Support/DailyBibleWallpaper/`，每次
-  產生新檔名（覆蓋同一個檔案 macOS 不會刷新桌面），7 天以上的舊檔會自動清掉。
+- **檔案放在哪。** `~/圖片/Daily Bible Wallpaper/`（Pictures），每次一個新檔，
+  檔名是「日期 時間 經文出處」，預設永久保留（每張約 1 MB）。同資料夾有 `log.tsv`
+  （每換一次記一行：時間、經文、心情、攝影師、Unsplash 原圖連結）和 `index.html`
+  （每日讀經紀錄：一張圖一張卡，新的在上，離線可開）。選單列的「每日讀經紀錄」
+  「打開桌布資料夾」就是開這兩個。要限制保留天數，把腳本開頭的 `KEEP_DAYS` 改成
+  天數。這個資料夾是獨立的，不會碰「照片」App。
+- **反思問題。** `mac/reflections.json` 每節經文三題（靈修用），選單的「今日反思」
+  和讀經紀錄頁每張卡的「反思」都從這裡讀。改題目直接改這個檔，然後複製進 App：
+  `cp mac/reflections.json "/Applications/DailyBibleWallpaper.app/Contents/Resources/"`
+  （無視窗版同理）。
 - **沒有網路或 Unsplash 掛了**，會用暖色漸層當底圖，桌布照樣換，通知裡會註明。
 - **執行紀錄**：用 `SCRIPT=` 方式排程時寫在 `~/Library/Logs/DailyBibleWallpaper.log`；
   走 App 的話 Platypus 不會留紀錄，出錯看通知即可。

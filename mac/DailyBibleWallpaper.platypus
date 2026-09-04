@@ -31,7 +31,9 @@
 	<key>DeclareService</key>
 	<false/>
 	<key>BundledFiles</key>
-	<array/>
+	<array>
+		<string>reflections.json</string>
+	</array>
 	<key>InterpreterArgs</key>
 	<array/>
 	<key>ScriptArgs</key>
