@@ -90,6 +90,21 @@ App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布
 
 兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
 
+### 之後更新腳本：直接複製進 App，不用重建
+
+Platypus 建出來的 App 只是一個資料夾，腳本放在 `Contents/Resources/script`。`mac/`
+有新版時，直接蓋過去比重新 Create App 可靠（重建時 Script Path 很容易指到舊檔）：
+
+```bash
+cd daily-bible-quote-widget
+cp mac/menu.sh "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
+cp mac/daily-bible-wallpaper.swift "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
+chmod +x "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
+```
+
+然後從選單列 Quit 再重開 App。無視窗版（`Daily Bible Wallpaper.app`）同理，只是
+`script` 要用 `mac/daily-bible-wallpaper.swift` 蓋，不用另外放第二份。
+
 ## 第三步：每天自動換
 
 ```bash
