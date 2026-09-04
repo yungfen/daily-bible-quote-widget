@@ -87,6 +87,15 @@ if [ $# -eq 0 ]; then
   echo "山岳"
   echo "隨機心情"
   echo "----"
+  # 回到之前的桌布：最近 15 張的子選單（檔名就是「日期 時間 經文出處」）。
+  if [ -d "$ARCHIVE_DIR" ]; then
+    RECENT=""
+    while IFS= read -r f; do
+      [ -n "$f" ] || continue
+      RECENT="$RECENT|$(basename "$f" .jpg)"
+    done < <(ls -1 "$ARCHIVE_DIR"/*.jpg 2>/dev/null | sort -r | head -15)
+    [ -n "$RECENT" ] && echo "SUBMENU|回到之前的桌布$RECENT"
+  fi
   echo "每日讀經紀錄"
   echo "打開桌布資料夾"
   exit 0
@@ -98,6 +107,17 @@ if [ "$USE_PLATYPUS_NOTIFY" = "1" ]; then
   notify_start() { echo "NOTIFICATION:$1|$2"; }
 else
   notify_start() { /usr/bin/osascript -e "display notification \"$2\" with title \"$1\"" >/dev/null 2>&1; }
+fi
+
+# 子選單「回到之前的桌布」：項目文字就是檔名（不含 .jpg），直接設回去。
+if [ -f "$ARCHIVE_DIR/$1.jpg" ]; then
+  f="$ARCHIVE_DIR/$1.jpg"
+  if /usr/bin/osascript -e "tell application \"System Events\" to tell every desktop to set picture to POSIX file \"$f\"" >/dev/null 2>&1; then
+    notify_start "桌布已換回" "$1"
+  else
+    notify_start "桌布沒有更動" "系統不讓設定：$1"
+  fi
+  exit 0
 fi
 
 case "$1" in
