@@ -433,11 +433,13 @@ func tsvField(_ s: String) -> String {
   s.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ")
 }
 let logStamp = DateFormatter()
-logStamp.dateFormat = "yyyy-MM-dd HH:mm"
+logStamp.dateFormat = "yyyy-MM-dd（EEE）HH:mm"
+logStamp.locale = Locale(identifier: "zh_Hant_TW")
+let moodZh: String = ["calm": "寧靜", "nature": "自然", "sky": "天空", "light": "光", "mountains": "山岳"][moodLabel] ?? moodLabel
 let logURL = dir.appendingPathComponent("log.tsv")
 let row = [
   logStamp.string(from: today), id, verse.zhRef, verse.enRef, verse.zhQuote, verse.enQuote,
-  moodLabel, image != nil ? (photo?.photographer ?? "") : "", image != nil ? (photo?.photoLink ?? "") : "",
+  moodZh, image != nil ? (photo?.photographer ?? "") : "", image != nil ? (photo?.photoLink ?? "") : "",
   file.lastPathComponent,
 ].map(tsvField).joined(separator: "\t") + "\n"
 if fm.fileExists(atPath: logURL.path), let h = try? FileHandle(forWritingTo: logURL) {
@@ -465,9 +467,8 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
     cards.append("""
     <article>
-      \(img)
+      <div class="pic">\(img)<time>\(htmlEsc(c[0]))</time></div>
       <div class="meta">
-        <time>\(htmlEsc(c[0]))</time>
         <h2>\(htmlEsc(c[2])) · \(htmlEsc(c[3]))</h2>
         <p class="zh">「\(htmlEsc(c[4]))」</p>
         <p class="en">“\(htmlEsc(c[5]))”</p>
@@ -495,11 +496,14 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     article { background: #fdfbf7; border-radius: 14px; overflow: hidden;
               box-shadow: 0 4px 18px rgba(0,0,0,.08); }
     @media (prefers-color-scheme: dark) { article { background: #2a2622; } }
+    .pic { position: relative; }
     article img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+    time { position: absolute; top: .75rem; left: .75rem; padding: .3rem .7rem; border-radius: 999px;
+           background: rgba(0,0,0,.45); color: #fff; font-size: 1.05rem; font-weight: 600;
+           letter-spacing: .06em; backdrop-filter: blur(4px); }
     .missing { aspect-ratio: 16 / 10; display: grid; place-items: center; opacity: .5; }
     .meta { padding: .9rem 1.1rem 1.1rem; }
-    time { font-size: .8rem; opacity: .6; letter-spacing: .05em; }
-    h2 { font-size: 1rem; font-weight: 600; margin: .25rem 0 .6rem; color: #8b7355; }
+    h2 { font-size: 1rem; font-weight: 600; margin: 0 0 .6rem; color: #8b7355; }
     .zh { margin: 0 0 .4rem; line-height: 1.7; }
     .en { margin: 0 0 .6rem; line-height: 1.5; font-style: italic; opacity: .85; }
     details { margin: 0 0 .7rem; font-size: .92rem; }
