@@ -417,11 +417,10 @@ if let list = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [
   }
 }
 
-// 通知直接顯示經文：標題是出處，內文是中文經文（展開可看全文）。
-var title = "\(verse.zhRef) · \(verse.enRef)"
-var body = "「\(verse.zhQuote)」"
-if let p = photo, image != nil { body += " Photo: \(p.photographer)" }
+// 通知只報一行：出處與攝影師。經文本身在選單列的選單裡（menu.sh）。
+var body = "桌布已換：\(verse.zhRef) · \(verse.enRef)"
+if let p = photo, image != nil { body += " · Photo: \(p.photographer)" }
 if !reason.isEmpty { body += "（\(reason)）" }
-if verseIsFallback { title += "（備用經文）" }
-notify(title, body)
+if verseIsFallback { body += "（備用經文）" }
+notify(APP_NAME, body)
 log("完成：\(setCount) 個螢幕已更新")
