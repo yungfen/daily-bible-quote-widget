@@ -433,8 +433,7 @@ func tsvField(_ s: String) -> String {
   s.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ")
 }
 let logStamp = DateFormatter()
-logStamp.dateFormat = "yyyy-MM-dd（EEE）HH:mm"
-logStamp.locale = Locale(identifier: "zh_Hant_TW")
+logStamp.dateFormat = "yyyy-MM-dd HH:mm"   // 存檔用固定格式；星期在產生頁面時才加
 let moodZh: String = ["calm": "寧靜", "nature": "自然", "sky": "天空", "light": "光", "mountains": "山岳"][moodLabel] ?? moodLabel
 let logURL = dir.appendingPathComponent("log.tsv")
 let row = [
@@ -452,6 +451,18 @@ func htmlEsc(_ s: String) -> String {
   s.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
    .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
 }
+// 顯示用的日期：補上星期。舊紀錄可能已含「（週五）」，先拿掉再解析。
+let parseStamp = DateFormatter()
+parseStamp.dateFormat = "yyyy-MM-dd HH:mm"
+let showStamp = DateFormatter()
+showStamp.locale = Locale(identifier: "zh_Hant_TW")
+showStamp.dateFormat = "yyyy-MM-dd（EEE）HH:mm"
+func displayDate(_ raw: String) -> String {
+  let cleaned = raw.replacingOccurrences(of: "（[^）]*）", with: "", options: .regularExpression)
+    .replacingOccurrences(of: "  ", with: " ")
+  if let d = parseStamp.date(from: cleaned) { return showStamp.string(from: d) }
+  return raw
+}
 if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
   var cards: [String] = []
   for line in logText.split(separator: "\n").reversed() {
@@ -467,13 +478,14 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
     cards.append("""
     <article>
-      <div class="pic">\(img)<time>\(htmlEsc(c[0]))</time></div>
+      <div class="pic">\(img)<time>\(htmlEsc(displayDate(c[0])))</time></div>
       <div class="meta">
         <h2>\(htmlEsc(c[2])) · \(htmlEsc(c[3]))</h2>
         <p class="zh">「\(htmlEsc(c[4]))」</p>
         <p class="en">“\(htmlEsc(c[5]))”</p>
         \(qBlock)
         <p class="credit">\(credit)<span>・\(htmlEsc(c[6]))</span></p>
+        \(exists ? "<p class=\"links\"><a href=\"\(htmlEsc(c[9]))\" download>下載桌布</a><a href=\"\(htmlEsc(c[9]))\" target=\"_blank\">打開原圖</a></p>" : "")
       </div>
     </article>
     """)
@@ -511,6 +523,10 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     details ul { margin: .4rem 0 0; padding-left: 1.2rem; line-height: 1.7; }
     .credit { margin: 0; font-size: .78rem; opacity: .65; }
     .credit a { color: inherit; }
+    .links { margin: .7rem 0 0; display: flex; gap: .5rem; }
+    .links a { font-size: .8rem; text-decoration: none; color: #8b7355; border: 1px solid #d4c5b1;
+               border-radius: 999px; padding: .25rem .7rem; }
+    .links a:hover { background: #8b7355; color: #fff; }
   </style></head><body>
   <header><h1>每日讀經紀錄 ✦ Daily Bible Wallpaper</h1>
   <p>每次換桌布留一筆。共 \(cards.count) 筆，新的在上。圖片存在 \(htmlEsc(dir.path))</p></header>
