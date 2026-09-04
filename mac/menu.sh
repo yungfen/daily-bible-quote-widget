@@ -88,19 +88,19 @@ else
 fi
 
 case "$1" in
-  "換一張桌布（依經文）") MOOD="verse" ;;
-  寧靜) MOOD="calm" ;;
-  自然) MOOD="nature" ;;
-  天空) MOOD="sky" ;;
-  光) MOOD="light" ;;
-  山岳) MOOD="mountains" ;;
-  隨機心情) MOOD="random" ;;
+  "換一張桌布（依經文）") MOOD="verse"; LABEL="依經文挑照片" ;;
+  寧靜) MOOD="calm"; LABEL="寧靜" ;;
+  自然) MOOD="nature"; LABEL="自然" ;;
+  天空) MOOD="sky"; LABEL="天空" ;;
+  光) MOOD="light"; LABEL="光" ;;
+  山岳) MOOD="mountains"; LABEL="山岳" ;;
+  隨機心情) MOOD="random"; LABEL="隨機心情" ;;
   *) exit 0 ;;   # verse lines and anything unknown: do nothing
 esac
 
 # Immediate feedback: Platypus shows nothing while a menu item's script runs,
-# and the Swift script takes several seconds (compile + network). Say so at
-# once, so a click never looks like it did nothing.
-notify_start "正在挑照片並合成桌布，約 10 秒…"
+# and the Swift script takes several seconds (compile + network). Say what is
+# happening at once, so a click never looks like it did nothing.
+notify_start "正在換桌布：${LABEL}，約 10 秒…"
 
 exec /usr/bin/swift "$SWIFT_SCRIPT" "$MOOD"
