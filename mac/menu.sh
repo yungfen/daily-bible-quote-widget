@@ -29,4 +29,10 @@ case "$1" in
   隨機心情) MOOD="random" ;;
   *) MOOD="verse" ;;
 esac
+
+# Immediate feedback: Platypus shows nothing while a menu item's script runs,
+# and the Swift script takes several seconds (compile + network). Say so at
+# once, so a click never looks like it did nothing.
+/usr/bin/osascript -e 'display notification "正在挑照片並合成桌布，約 10 秒…" with title "Daily Bible Wallpaper"' >/dev/null 2>&1
+
 exec /usr/bin/swift "$SWIFT_SCRIPT" "$MOOD"

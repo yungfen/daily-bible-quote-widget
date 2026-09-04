@@ -72,6 +72,14 @@ App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布
 指到 `mac/menu.sh`（Script Type 選 Shell）、**Bundled Files** 加入
 `mac/daily-bible-wallpaper.swift`、勾 Remain running after execution。
 
+選單列上的圖示在 **Status Item Settings** 裡設：Display 選 **Icon**，把
+`mac/icon/menubar-cross@2x.png` 拖進去，勾 **Template icon**（深色、淺色選單列都會
+自動反色）。這個欄位 Platypus 不一定會從設定檔讀進來，沒出現十字就手動設一次；
+沒設的話會顯示預設文字 Title。
+
+點選單項目後會先跳「正在挑照片並合成桌布…」的通知，換好再跳完成通知；中間
+大約十秒（swift 每次都要先編譯腳本）。
+
 兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
 
 ## 第三步：每天自動換
