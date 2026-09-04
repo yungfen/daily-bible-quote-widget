@@ -17,7 +17,11 @@
 	<key>InterfaceType</key>
 	<string>Status Menu</string>
 	<key>StatusItemDisplayType</key>
-	<string>Text</string>
+	<string>Icon</string>
+	<key>StatusItemIcon</key>
+	<string>icon/menubar-cross@2x.png</string>
+	<key>StatusItemIconIsTemplate</key>
+	<true/>
 	<key>StatusItemTitle</key>
 	<string>✝</string>
 	<key>StatusItemUseSystemFont</key>

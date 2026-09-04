@@ -72,7 +72,38 @@ App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布
 指到 `mac/menu.sh`（Script Type 選 Shell）、**Bundled Files** 加入
 `mac/daily-bible-wallpaper.swift`、勾 Remain running after execution。
 
+選單列上的圖示在 **Status Item Settings** 裡設：Display 選 **Icon**，把
+`mac/icon/menubar-cross@2x.png` 拖進去，勾 **Template icon**（深色、淺色選單列都會
+自動反色）。這個欄位 Platypus 不一定會從設定檔讀進來，沒出現十字就手動設一次；
+沒設的話會顯示預設文字 Title。
+
+選單最上面幾行灰字就是今天的經文（中英），每天第一次打開選單時用 curl 抓一次並
+快取在 `~/Library/Application Support/DailyBibleWallpaper/verse-日期.json`，之後打開
+不等網路。點選單項目後會先跳「正在挑照片並合成桌布…」的通知，換好再跳一行
+「桌布已換：出處 · 攝影師」；中間大約十秒（swift 每次都要先編譯腳本）。
+
+通知的圖示：選單列版的通知由 App 本身發出（腳本印 `NOTIFICATION:` 行，Platypus
+負責顯示），所以會帶 App 的 icon。直接在終端機跑腳本、或用無視窗版排程時，通知
+是 osascript 發的，macOS 會掛在「工序指令編寫程式」名下、圖示是捲軸，這是系統
+限制。如果選單列版點了完全沒有通知，把 `mac/menu.sh` 開頭的
+`USE_PLATYPUS_NOTIFY=1` 改成 `0` 重建 App，就退回 osascript。
+
 兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
+
+### 之後更新腳本：直接複製進 App，不用重建
+
+Platypus 建出來的 App 只是一個資料夾，腳本放在 `Contents/Resources/script`。`mac/`
+有新版時，直接蓋過去比重新 Create App 可靠（重建時 Script Path 很容易指到舊檔）：
+
+```bash
+cd daily-bible-quote-widget
+cp mac/menu.sh "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
+cp mac/daily-bible-wallpaper.swift "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
+chmod +x "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
+```
+
+然後從選單列 Quit 再重開 App。無視窗版（`Daily Bible Wallpaper.app`）同理，只是
+`script` 要用 `mac/daily-bible-wallpaper.swift` 蓋，不用另外放第二份。
 
 ## 第三步：每天自動換
 

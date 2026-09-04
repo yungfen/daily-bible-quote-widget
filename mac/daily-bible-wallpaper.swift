@@ -63,7 +63,14 @@ setbuf(stdout, nil)
 func log(_ s: String) { print(s) }
 
 /// macOS 右上角通知。成功、失敗都通知，不讓任何一種結果無聲無息。
+/// DBW_NOTIFY=platypus 時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的名字
+/// 和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
+let NOTIFY_MODE = ProcessInfo.processInfo.environment["DBW_NOTIFY"] ?? "osascript"
 func notify(_ title: String, _ body: String) {
+  if NOTIFY_MODE == "platypus" {
+    print("NOTIFICATION:\(title)|\(body)") // Platypus format: title|text
+    return
+  }
   func esc(_ s: String) -> String {
     s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
   }
@@ -308,6 +315,23 @@ let modeArg = CommandLine.arguments.dropFirst().first?.lowercased() ?? "verse"
 let today = Date()
 let id = verseId(for: today)
 
+// `--verse`：只顯示今天的經文，不換桌布（選單列的「今天的經文」用）。
+if modeArg == "--verse" {
+  let (v, fb) = fetchVerse(id)
+  let title = "\(v.zhRef) · \(v.enRef)" + (fb ? "（備用經文）" : "")
+  let text = "「\(v.zhQuote)」  “\(v.enQuote)”"
+  if NOTIFY_MODE == "platypus" {
+    print("ALERT:\(title)|\(text)")
+  } else {
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    let esc = { (s: String) in s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") }
+    p.arguments = ["-e", "display dialog \"\(esc(text))\" with title \"\(esc(title))\" buttons {\"好\"} default button 1"]
+    try? p.run(); p.waitUntilExit()
+  }
+  exit(0)
+}
+
 var query = themes[id] ?? defaultQuery
 var moodLabel = "依經文"
 if modeArg == "random", let m = moods.keys.randomElement() {
@@ -341,7 +365,7 @@ if !reason.isEmpty { log(reason) }
 
 guard let jpeg = compose(verse: verse, photo: image, credit: image == nil ? nil : photo?.photographer, w: pxW, h: pxH) else {
   log("合成失敗")
-  notify(APP_NAME, "桌布合成失敗，桌面沒有更動。")
+  notify("桌布沒有更動", "合成圖片失敗。")
   exit(1)
 }
 
@@ -350,7 +374,7 @@ let dir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
   .appendingPathComponent("DailyBibleWallpaper", isDirectory: true)
 do { try fm.createDirectory(at: dir, withIntermediateDirectories: true) } catch {
   log("無法建立資料夾 \(dir.path)：\(error)")
-  notify(APP_NAME, "無法建立桌布資料夾，桌面沒有更動。")
+  notify("桌布沒有更動", "無法建立存檔資料夾。")
   exit(1)
 }
 let stamp = DateFormatter()
@@ -358,7 +382,7 @@ stamp.dateFormat = "yyyyMMdd-HHmmss"
 let file = dir.appendingPathComponent("wallpaper-\(stamp.string(from: today)).jpg")
 do { try jpeg.write(to: file) } catch {
   log("無法寫入 \(file.path)：\(error)")
-  notify(APP_NAME, "無法儲存桌布檔案，桌面沒有更動。")
+  notify("桌布沒有更動", "無法儲存圖片檔。")
   exit(1)
 }
 log("已存 \(file.path)（\(jpeg.count / 1024) KB）")
@@ -378,7 +402,7 @@ for screen in screens {
   }
 }
 if setCount == 0 {
-  notify(APP_NAME, "桌布已產生但設定失敗：\(file.lastPathComponent)")
+  notify("桌布沒有更動", "圖片做好了但系統不讓設定（\(file.lastPathComponent)）")
   exit(1)
 }
 if let p = photo, image != nil { triggerUnsplashDownload(p) }
@@ -393,9 +417,27 @@ if let list = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [
   }
 }
 
-var body = "\(verse.zhRef) · \(verse.enRef)"
-if let p = photo, image != nil { body += " · Photo: \(p.photographer)" }
-if !reason.isEmpty { body += "（\(reason)）" }
-if verseIsFallback { body += "（取不到今日經文，顯示備用經文）" }
-notify(APP_NAME, body)
+// 通知說清楚做了什麼：換成哪節經文、用什麼方式選的照片、誰拍的；
+// 沒有照片時說明原因。經文全文在選單列的選單裡（menu.sh）。
+let moodText: String = {
+  switch moodLabel {
+  case "依經文": return "依經文"
+  case "calm": return "寧靜"
+  case "nature": return "自然"
+  case "sky": return "天空"
+  case "light": return "光"
+  case "mountains": return "山岳"
+  default: return moodLabel
+  }
+}()
+var title = "桌布已換：\(verse.zhRef)"
+var body: String
+if let p = photo, image != nil {
+  body = "\(moodText)的照片 · 攝影 \(p.photographer)"
+} else {
+  body = "沒有照片，用漸層底圖：\(reason.isEmpty ? "未知原因" : reason)"
+}
+if verseIsFallback { title += "（備用經文）"; body += "。今天的經文取不到" }
+if screens.count > 1 { body += "（\(setCount) 個螢幕）" }
+notify(title, body)
 log("完成：\(setCount) 個螢幕已更新")
