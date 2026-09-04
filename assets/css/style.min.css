@@ -13,7 +13,7 @@
 .wp-device.active{background:var(--container-bg);color:var(--text-color);box-shadow:var(--shadow-elevated)}
 .wp-preview{position:relative;margin:.9rem 1.1rem;display:flex;align-items:center;justify-content:center;min-height:180px;background:var(--section-bg);border-radius:12px;overflow:hidden}
 #wpCanvas{display:block;max-width:100%;max-height:46vh;border-radius:10px;box-shadow:0 4px 18px rgba(0,0,0,.25)}
-.wp-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--date-color);font-size:.85rem;pointer-events:none;opacity:0;transition:opacity .2s}
+.wp-loading{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:center;padding-bottom:.7rem;pointer-events:none;opacity:0;transition:opacity .2s}.wp-loading span{background:rgba(0,0,0,.55);color:#fff;font-size:.78rem;padding:.28rem .75rem;border-radius:999px;backdrop-filter:blur(4px)}
 .wp-loading.show{opacity:1}
 .wp-credit{min-height:1rem;padding:0 1.1rem;font-size:.7rem;color:var(--date-color);text-align:center}
 .wp-credit a{color:var(--reference-color);text-decoration:none}

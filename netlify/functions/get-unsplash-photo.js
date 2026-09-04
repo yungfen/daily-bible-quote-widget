@@ -88,10 +88,14 @@ exports.handler = async function (event) {
     if (params.query && /^[a-zA-Z][a-zA-Z ,-]{0,79}$/.test(params.query)) {
       query = params.query;
     }
+    // Optional count=N (1–10): one Unsplash request returns N photos, so the
+    // client can offer "換一張" N−1 times without another round trip.
+    const count = Math.min(10, Math.max(1, parseInt(params.count, 10) || 1));
     const url = 'https://api.unsplash.com/photos/random'
       + `?orientation=${orientation}`
       + `&query=${encodeURIComponent(query)}`
-      + '&content_filter=high';
+      + '&content_filter=high'
+      + (params.count ? `&count=${count}` : '');
 
     const res = await fetch(url, { headers: { Authorization: `Client-ID ${ACCESS_KEY}` } });
     if (!res.ok) {
@@ -103,8 +107,8 @@ exports.handler = async function (event) {
       };
     }
 
-    const p = await res.json();
-    const result = {
+    const data = await res.json();
+    const shape = (p) => ({
       id: p.id,
       // urls.raw supports Imgix params, so the client requests exact device size.
       imageBaseUrl: p.urls && p.urls.raw,
@@ -114,7 +118,13 @@ exports.handler = async function (event) {
         link: `${(p.user && p.user.links && p.user.links.html) || 'https://unsplash.com'}?${UTM}`,
       },
       photoLink: `${(p.links && p.links.html) || 'https://unsplash.com'}?${UTM}`,
-    };
+    });
+    // With count=N Unsplash returns an array; without it, a single object.
+    // Keep the single-object shape when count was not asked for, so older
+    // clients (and the Mac/Scriptable scripts) keep working.
+    const result = params.count
+      ? { photos: (Array.isArray(data) ? data : [data]).map(shape) }
+      : shape(Array.isArray(data) ? data[0] : data);
 
     return {
       statusCode: 200,

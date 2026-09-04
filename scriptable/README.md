@@ -60,3 +60,38 @@ Tapping the widget opens the full website.
 If you change the verse list in `index.html`, update the `verseList` array in
 `daily-bible-widget.js` to match so the widget keeps showing the same verse as
 the site.
+
+## 每天自動換桌布（iPhone / iPad）
+
+iOS 不讓 App 直接更換桌布，但有一條 Apple 自己提供的路：**照片輪播（Photo
+Shuffle）＋相簿**（iOS 17.1 以上）。`daily-bible-wallpaper.js` 每天產生一張
+「當日經文＋主題照片」的圖，捷徑把它存進指定相簿，鎖定畫面設成輪播那個相簿，
+桌布就每天自己換。
+
+### 設定一次，之後不用管
+
+1. **Scriptable**：新增腳本，貼上 [`daily-bible-wallpaper.js`](./daily-bible-wallpaper.js)，
+   命名 **Daily Bible Wallpaper**，開頭的 `SITE_BASE_URL` 改成你的網站網址。
+2. **先在 Scriptable 裡按 ▶ 跑一次**：會先預覽，再問要不要存到照片。看一下字型
+   與位置。
+3. **照片 App**：新增相簿，命名「每日聖經金句」。
+4. **捷徑 App** → 新增捷徑：
+   - 動作一：Scriptable「Run Script」→ 選 Daily Bible Wallpaper，**Run In App 關掉**
+     （想指定心情可在「Parameter」填 `calm`、`nature`、`sky`、`light`、`mountains`
+     或 `random`，不填就依經文）。
+   - 動作二：照片「儲存到相簿」→ 相簿選「每日聖經金句」，輸入用上一步的 Script Result。
+   - 命名「每日桌布」，跑一次確認相簿裡多了一張。
+5. **捷徑 → 自動化** → 新增個人自動化 → 時間 → 每天 06:00 → 執行「每日桌布」
+   → **立即執行**（不要「執行前先詢問」）。
+6. **設定 → 桌布 → 加入新桌布 → 照片輪播** → 「使用相簿」選「每日聖經金句」
+   → 輪播頻率「每天」。
+
+之後每天早上六點多一張新圖進相簿，鎖定畫面當天就換成它。
+
+### 幾個注意
+
+- 相簿會越來越多張，輪播是在整個相簿裡挑，想「只看今天的」就定期清舊圖，
+  或把輪播頻率設「每天」讓它照順序輪。
+- 拿不到照片（沒網路、Unsplash 掛了）會用漸層底圖並發通知說明，桌布照樣換。
+- 字型：iOS 內建的 Georgia 與宋體（Songti TC），與網站的氣質一致。
+- 每天只呼叫 Unsplash 兩次（取照片、回報使用），不會碰到配額。

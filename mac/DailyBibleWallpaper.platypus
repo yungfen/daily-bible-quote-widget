@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Name</key>
+	<string>Daily Bible Wallpaper</string>
+	<key>Identifier</key>
+	<string>com.yungfen.daily-bible-wallpaper</string>
+	<key>Author</key>
+	<string>Yung-Fen Liu</string>
+	<key>Version</key>
+	<string>1.0</string>
+	<key>InterpreterPath</key>
+	<string>/usr/bin/swift</string>
+	<key>ScriptPath</key>
+	<string>daily-bible-wallpaper.swift</string>
+	<key>InterfaceType</key>
+	<string>None</string>
+	<key>RunInBackground</key>
+	<true/>
+	<key>RemainRunning</key>
+	<false/>
+	<key>Droppable</key>
+	<false/>
+	<key>AcceptsFiles</key>
+	<false/>
+	<key>AcceptsText</key>
+	<false/>
+	<key>PromptForFileOnLaunch</key>
+	<false/>
+	<key>DeclareService</key>
+	<false/>
+	<key>BundledFiles</key>
+	<array/>
+	<key>InterpreterArgs</key>
+	<array/>
+	<key>ScriptArgs</key>
+	<array/>
+</dict>
+</plist>
