@@ -46,10 +46,11 @@ print_verse_lines() {
     return
   fi
   # Parse + wrap with the built-in JavaScript runtime (no Swift compile here).
-  /usr/bin/osascript -l JavaScript - "$cache" <<'JS'
+  VERSE_CACHE="$cache" /usr/bin/osascript -l JavaScript <<'JS' 2>/dev/null
 function run(argv) {
   ObjC.import("Foundation");
-  var raw = $.NSString.stringWithContentsOfFileEncodingError(argv[0], 4, null);
+  var path = ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey("VERSE_CACHE"));
+  var raw = $.NSString.stringWithContentsOfFileEncodingError(path, 4, null);
   var d; try { d = JSON.parse(ObjC.unwrap(raw)); } catch (e) { return "DISABLED|（經文格式錯誤）"; }
   if (!d || !d.english || !d.chinese) return "DISABLED|（經文暫時無法取得）";
   var clean = function (t) { return String(t || "").replace(/<[^>]*>/g, "").replace(/&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim(); };
@@ -61,6 +62,7 @@ function run(argv) {
   wrapEn("“" + clean(d.english.quote) + "”", 44).forEach(function (l) { lines.push("DISABLED|" + l); });
   return lines.join("\n");
 }
+run([]);
 JS
 }
 
