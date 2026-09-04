@@ -63,7 +63,14 @@ setbuf(stdout, nil)
 func log(_ s: String) { print(s) }
 
 /// macOS 右上角通知。成功、失敗都通知，不讓任何一種結果無聲無息。
+/// DBW_NOTIFY=platypus 時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的名字
+/// 和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
+let NOTIFY_MODE = ProcessInfo.processInfo.environment["DBW_NOTIFY"] ?? "osascript"
 func notify(_ title: String, _ body: String) {
+  if NOTIFY_MODE == "platypus" {
+    print("NOTIFICATION:\(title)｜\(body)")
+    return
+  }
   func esc(_ s: String) -> String {
     s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"")
   }
@@ -308,6 +315,23 @@ let modeArg = CommandLine.arguments.dropFirst().first?.lowercased() ?? "verse"
 let today = Date()
 let id = verseId(for: today)
 
+// `--verse`：只顯示今天的經文，不換桌布（選單列的「今天的經文」用）。
+if modeArg == "--verse" {
+  let (v, fb) = fetchVerse(id)
+  let title = "\(v.zhRef) · \(v.enRef)" + (fb ? "（備用經文）" : "")
+  let text = "「\(v.zhQuote)」  “\(v.enQuote)”"
+  if NOTIFY_MODE == "platypus" {
+    print("ALERT:\(title)|\(text)")
+  } else {
+    let p = Process()
+    p.executableURL = URL(fileURLWithPath: "/usr/bin/osascript")
+    let esc = { (s: String) in s.replacingOccurrences(of: "\\", with: "\\\\").replacingOccurrences(of: "\"", with: "\\\"") }
+    p.arguments = ["-e", "display dialog \"\(esc(text))\" with title \"\(esc(title))\" buttons {\"好\"} default button 1"]
+    try? p.run(); p.waitUntilExit()
+  }
+  exit(0)
+}
+
 var query = themes[id] ?? defaultQuery
 var moodLabel = "依經文"
 if modeArg == "random", let m = moods.keys.randomElement() {
@@ -393,9 +417,11 @@ if let list = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [
   }
 }
 
-var body = "\(verse.zhRef) · \(verse.enRef)"
-if let p = photo, image != nil { body += " · Photo: \(p.photographer)" }
+// 通知直接顯示經文：標題是出處，內文是中文經文（展開可看全文）。
+var title = "\(verse.zhRef) · \(verse.enRef)"
+var body = "「\(verse.zhQuote)」"
+if let p = photo, image != nil { body += " Photo: \(p.photographer)" }
 if !reason.isEmpty { body += "（\(reason)）" }
-if verseIsFallback { body += "（取不到今日經文，顯示備用經文）" }
-notify(APP_NAME, body)
+if verseIsFallback { title += "（備用經文）" }
+notify(title, body)
 log("完成：\(setCount) 個螢幕已更新")
