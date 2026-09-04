@@ -63,9 +63,14 @@ setbuf(stdout, nil)
 func log(_ s: String) { print(s) }
 
 /// macOS 右上角通知。成功、失敗都通知，不讓任何一種結果無聲無息。
-/// DBW_NOTIFY=platypus 時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的名字
-/// 和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
-let NOTIFY_MODE = ProcessInfo.processInfo.environment["DBW_NOTIFY"] ?? "osascript"
+/// 在 Platypus 包的 .app 裡跑時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的
+/// 名字和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
+/// 偵測方式：腳本路徑落在 *.app/Contents/Resources/ 底下；也可用 DBW_NOTIFY 強制。
+let NOTIFY_MODE: String = {
+  if let forced = ProcessInfo.processInfo.environment["DBW_NOTIFY"] { return forced }
+  let scriptPath = CommandLine.arguments.first ?? ""
+  return scriptPath.contains(".app/Contents/Resources/") ? "platypus" : "osascript"
+}()
 func notify(_ title: String, _ body: String) {
   if NOTIFY_MODE == "platypus" {
     print("NOTIFICATION:\(title)|\(body)") // Platypus format: title|text

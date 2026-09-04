@@ -82,11 +82,12 @@ App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布
 不等網路。點選單項目後會先跳「正在挑照片並合成桌布…」的通知，換好再跳一行
 「桌布已換：出處 · 攝影師」；中間大約十秒（swift 每次都要先編譯腳本）。
 
-通知的圖示：選單列版的通知由 App 本身發出（腳本印 `NOTIFICATION:` 行，Platypus
-負責顯示），所以會帶 App 的 icon。直接在終端機跑腳本、或用無視窗版排程時，通知
-是 osascript 發的，macOS 會掛在「工序指令編寫程式」名下、圖示是捲軸，這是系統
-限制。如果選單列版點了完全沒有通知，把 `mac/menu.sh` 開頭的
-`USE_PLATYPUS_NOTIFY=1` 改成 `0` 重建 App，就退回 osascript。
+通知的圖示：只要腳本是在 Platypus 包的 .app 裡面跑（選單列版、無視窗版、排程都
+是），通知由 App 本身發出（腳本印 `NOTIFICATION:` 行，Platypus 負責顯示），會帶
+App 的 icon。直接在終端機用 `swift` 跑腳本時，通知是 osascript 發的，macOS 會掛在
+「工序指令編寫程式」名下、圖示是捲軸，這是系統限制。如果在 App 裡完全沒有通知，
+把 `mac/menu.sh` 開頭的 `USE_PLATYPUS_NOTIFY=1` 改成 `0`（無視窗版則在排程加環境
+變數 `DBW_NOTIFY=osascript`），就退回 osascript。
 
 兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
 
