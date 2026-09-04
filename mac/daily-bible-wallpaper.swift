@@ -12,8 +12,9 @@
 //
 // 需求：macOS 12 以上，Xcode Command Line Tools（提供 /usr/bin/swift）。
 // 沒有 Unsplash 金鑰或網路不通時，退回漸層底圖，桌布照樣會換。
-// 每次都存成新檔名（macOS 會快取同路徑的桌布，覆蓋同一個檔案桌面不會更新），
-// 超過 KEEP_DAYS 天的舊檔自動清掉。
+// 每次都存成新檔名（macOS 會快取同路徑的桌布，覆蓋同一個檔案桌面不會更新）。
+// 圖存在 ~/Pictures/Daily Bible Wallpaper/，同資料夾維護 log.tsv 與 index.html
+// （每日讀經紀錄：一張圖一張卡，新的在上）。KEEP_DAYS = 0 表示永久保留。
 
 import AppKit
 import Foundation
@@ -21,7 +22,8 @@ import Foundation
 // ─── 設定 ─────────────────────────────────────────────────────────────
 let SITE_BASE_URL = "https://daily-bible-quote-widget.netlify.app"
 let APP_NAME = "Daily Bible Wallpaper"
-let KEEP_DAYS = 7
+let KEEP_DAYS = 0            // 0 = 永久保留；>0 = 只留最近幾天
+let ARCHIVE_DIR_NAME = "Daily Bible Wallpaper"   // 放在 ~/Pictures 底下
 
 // 與 assets/js/app.min.js 的 verseList 同序，每天用「一年中的第幾天」取模。
 let verseList = [
@@ -63,9 +65,14 @@ setbuf(stdout, nil)
 func log(_ s: String) { print(s) }
 
 /// macOS 右上角通知。成功、失敗都通知，不讓任何一種結果無聲無息。
-/// DBW_NOTIFY=platypus 時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的名字
-/// 和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
-let NOTIFY_MODE = ProcessInfo.processInfo.environment["DBW_NOTIFY"] ?? "osascript"
+/// 在 Platypus 包的 .app 裡跑時改印 `NOTIFICATION:` 行——Platypus 會用 App 自己的
+/// 名字和圖示發通知（osascript 發的會掛在「工序指令編寫程式」名下、圖示是捲軸）。
+/// 偵測方式：腳本路徑落在 *.app/Contents/Resources/ 底下；也可用 DBW_NOTIFY 強制。
+let NOTIFY_MODE: String = {
+  if let forced = ProcessInfo.processInfo.environment["DBW_NOTIFY"] { return forced }
+  let scriptPath = CommandLine.arguments.first ?? ""
+  return scriptPath.contains(".app/Contents/Resources/") ? "platypus" : "osascript"
+}()
 func notify(_ title: String, _ body: String) {
   if NOTIFY_MODE == "platypus" {
     print("NOTIFICATION:\(title)|\(body)") // Platypus format: title|text
@@ -142,6 +149,7 @@ struct Photo {
   var id: String
   var baseUrl: String
   var photographer: String
+  var photoLink: String
 }
 
 /// 回傳 (照片, 失敗原因)。照片為 nil 時原因一定非空。
@@ -155,7 +163,8 @@ func fetchPhoto(query: String) -> (Photo?, String) {
   guard let id = json["id"] as? String, let base = json["imageBaseUrl"] as? String
   else { return (nil, "Unsplash 暫時無法使用，改用漸層底圖") }
   let name = ((json["photographer"] as? [String: Any])?["name"] as? String) ?? "Unsplash"
-  return (Photo(id: id, baseUrl: base, photographer: name), "")
+  let link = (json["photoLink"] as? String) ?? "https://unsplash.com"
+  return (Photo(id: id, baseUrl: base, photographer: name, photoLink: link), "")
 }
 
 /// 直接向 imgix 要螢幕尺寸的裁切圖（不用 crop=entropy，那是最慢的裁切方式）。
@@ -370,16 +379,17 @@ guard let jpeg = compose(verse: verse, photo: image, credit: image == nil ? nil 
 }
 
 let fm = FileManager.default
-let dir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-  .appendingPathComponent("DailyBibleWallpaper", isDirectory: true)
+let dir = fm.urls(for: .picturesDirectory, in: .userDomainMask)[0]
+  .appendingPathComponent(ARCHIVE_DIR_NAME, isDirectory: true)
 do { try fm.createDirectory(at: dir, withIntermediateDirectories: true) } catch {
   log("無法建立資料夾 \(dir.path)：\(error)")
   notify("桌布沒有更動", "無法建立存檔資料夾。")
   exit(1)
 }
 let stamp = DateFormatter()
-stamp.dateFormat = "yyyyMMdd-HHmmss"
-let file = dir.appendingPathComponent("wallpaper-\(stamp.string(from: today)).jpg")
+stamp.dateFormat = "yyyy-MM-dd HH-mm"
+let safeRef = verse.zhRef.replacingOccurrences(of: ":", with: ".").replacingOccurrences(of: "/", with: "-")
+let file = dir.appendingPathComponent("\(stamp.string(from: today)) \(safeRef).jpg")
 do { try jpeg.write(to: file) } catch {
   log("無法寫入 \(file.path)：\(error)")
   notify("桌布沒有更動", "無法儲存圖片檔。")
@@ -407,10 +417,134 @@ if setCount == 0 {
 }
 if let p = photo, image != nil { triggerUnsplashDownload(p) }
 
-// 清掉舊檔（只動本程式自己產生的 wallpaper-*.jpg）。
-if let list = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey]) {
+// ─── 反思問題：reflections.json 與腳本放在同一個資料夾（App 裡是 Contents/Resources）───
+func loadReflections() -> [String: [String]] {
+  let scriptDir = URL(fileURLWithPath: CommandLine.arguments.first ?? ".").deletingLastPathComponent()
+  for u in [scriptDir.appendingPathComponent("reflections.json"),
+            URL(fileURLWithPath: fm.currentDirectoryPath).appendingPathComponent("mac/reflections.json")] {
+    if let d = try? Data(contentsOf: u), let j = try? JSONSerialization.jsonObject(with: d) as? [String: [String]] { return j }
+  }
+  return [:]
+}
+let reflections = loadReflections()
+
+// ─── 每日讀經紀錄：log.tsv 一行一筆，index.html 由 log 重建 ───
+func tsvField(_ s: String) -> String {
+  s.replacingOccurrences(of: "\t", with: " ").replacingOccurrences(of: "\n", with: " ")
+}
+let logStamp = DateFormatter()
+logStamp.dateFormat = "yyyy-MM-dd HH:mm"   // 存檔用固定格式；星期在產生頁面時才加
+let moodZh: String = ["calm": "寧靜", "nature": "自然", "sky": "天空", "light": "光", "mountains": "山岳"][moodLabel] ?? moodLabel
+let logURL = dir.appendingPathComponent("log.tsv")
+let row = [
+  logStamp.string(from: today), id, verse.zhRef, verse.enRef, verse.zhQuote, verse.enQuote,
+  moodZh, image != nil ? (photo?.photographer ?? "") : "", image != nil ? (photo?.photoLink ?? "") : "",
+  file.lastPathComponent,
+].map(tsvField).joined(separator: "\t") + "\n"
+if fm.fileExists(atPath: logURL.path), let h = try? FileHandle(forWritingTo: logURL) {
+  h.seekToEndOfFile(); h.write(row.data(using: .utf8)!); h.closeFile()
+} else {
+  try? row.write(to: logURL, atomically: true, encoding: .utf8)
+}
+
+func htmlEsc(_ s: String) -> String {
+  s.replacingOccurrences(of: "&", with: "&amp;").replacingOccurrences(of: "<", with: "&lt;")
+   .replacingOccurrences(of: ">", with: "&gt;").replacingOccurrences(of: "\"", with: "&quot;")
+}
+// 顯示用的日期：補上星期。舊紀錄可能已含「（週五）」，先拿掉再解析。
+let parseStamp = DateFormatter()
+parseStamp.dateFormat = "yyyy-MM-dd HH:mm"
+let showStamp = DateFormatter()
+showStamp.locale = Locale(identifier: "zh_Hant_TW")
+showStamp.dateFormat = "yyyy-MM-dd（EEE）HH:mm"
+func displayDate(_ raw: String) -> String {
+  let cleaned = raw.replacingOccurrences(of: "（[^）]*）", with: "", options: .regularExpression)
+    .replacingOccurrences(of: "  ", with: " ")
+  if let d = parseStamp.date(from: cleaned) { return showStamp.string(from: d) }
+  return raw
+}
+if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
+  var cards: [String] = []
+  for line in logText.split(separator: "\n").reversed() {
+    let c = line.components(separatedBy: "\t")
+    guard c.count >= 10 else { continue }
+    let credit = c[7].isEmpty ? "漸層底圖" :
+      "Photo: <a href=\"\(htmlEsc(c[8]))\" target=\"_blank\" rel=\"noopener\">\(htmlEsc(c[7]))</a> / Unsplash"
+    let exists = fm.fileExists(atPath: dir.appendingPathComponent(c[9]).path)
+    let img = exists
+      ? "<a href=\"\(htmlEsc(c[9]))\"><img loading=\"lazy\" src=\"\(htmlEsc(c[9]))\" alt=\"\"></a>"
+      : "<div class=\"missing\">（圖檔已刪除）</div>"
+    let qs = (reflections[c[1]] ?? []).map { "<li>\(htmlEsc($0))</li>" }.joined()
+    let fileAttr = htmlEsc(c[9])
+    let linksBlock = exists
+      ? "<p class=\"links\"><a href=\"\(fileAttr)\" download>下載桌布</a><a href=\"\(fileAttr)\" target=\"_blank\">打開原圖</a></p>"
+      : ""
+    let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
+    cards.append("""
+    <article>
+      <div class="pic">\(img)<time>\(htmlEsc(displayDate(c[0])))</time></div>
+      <div class="meta">
+        <h2>\(htmlEsc(c[2])) · \(htmlEsc(c[3]))</h2>
+        <p class="zh">「\(htmlEsc(c[4]))」</p>
+        <p class="en">“\(htmlEsc(c[5]))”</p>
+        \(qBlock)
+        <p class="credit">\(credit)<span>・\(htmlEsc(c[6]))</span></p>
+        \(linksBlock)
+      </div>
+    </article>
+    """)
+  }
+  let html = """
+  <!DOCTYPE html>
+  <html lang="zh-Hant"><head><meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>每日讀經紀錄 · Daily Bible Wallpaper</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { margin: 0; padding: 2rem 1.5rem 4rem; background: #f5f1e8; color: #4a4036;
+           font-family: "Songti TC", Georgia, "Times New Roman", serif; }
+    @media (prefers-color-scheme: dark) { body { background: #1e1b18; color: #e5dfd6; } }
+    header { max-width: 1100px; margin: 0 auto 1.5rem; }
+    h1 { font-weight: 600; font-size: 1.5rem; margin: 0; letter-spacing: .04em; }
+    header p { margin: .3rem 0 0; opacity: .65; font-size: .9rem; }
+    main { max-width: 1100px; margin: 0 auto; display: grid; gap: 1.4rem;
+           grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+    article { background: #fdfbf7; border-radius: 14px; overflow: hidden;
+              box-shadow: 0 4px 18px rgba(0,0,0,.08); }
+    @media (prefers-color-scheme: dark) { article { background: #2a2622; } }
+    .pic { position: relative; }
+    article img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; }
+    time { position: absolute; top: .75rem; left: .75rem; padding: .3rem .7rem; border-radius: 999px;
+           background: rgba(0,0,0,.45); color: #fff; font-size: 1.05rem; font-weight: 600;
+           letter-spacing: .06em; backdrop-filter: blur(4px); }
+    .missing { aspect-ratio: 16 / 10; display: grid; place-items: center; opacity: .5; }
+    .meta { padding: .9rem 1.1rem 1.1rem; }
+    h2 { font-size: 1rem; font-weight: 600; margin: 0 0 .6rem; color: #8b7355; }
+    .zh { margin: 0 0 .4rem; line-height: 1.7; }
+    .en { margin: 0 0 .6rem; line-height: 1.5; font-style: italic; opacity: .85; }
+    details { margin: 0 0 .7rem; font-size: .92rem; }
+    summary { cursor: pointer; color: #8b7355; font-weight: 600; }
+    details ul { margin: .4rem 0 0; padding-left: 1.2rem; line-height: 1.7; }
+    .credit { margin: 0; font-size: .78rem; opacity: .65; }
+    .credit a { color: inherit; }
+    .links { margin: .7rem 0 0; display: flex; gap: .5rem; }
+    .links a { font-size: .8rem; text-decoration: none; color: #8b7355; border: 1px solid #d4c5b1;
+               border-radius: 999px; padding: .25rem .7rem; }
+    .links a:hover { background: #8b7355; color: #fff; }
+  </style></head><body>
+  <header><h1>每日讀經紀錄 ✦ Daily Bible Wallpaper</h1>
+  <p>每次換桌布留一筆。共 \(cards.count) 筆，新的在上。圖片存在 \(htmlEsc(dir.path))</p></header>
+  <main>
+  \(cards.joined(separator: "\n"))
+  </main></body></html>
+  """
+  try? html.write(to: dir.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+}
+
+// KEEP_DAYS > 0 才清舊檔；只動本程式自己產生的 .jpg。
+if KEEP_DAYS > 0, let list = try? fm.contentsOfDirectory(at: dir, includingPropertiesForKeys: [.contentModificationDateKey]) {
   let cutoff = today.addingTimeInterval(-Double(KEEP_DAYS) * 86400)
-  for f in list where f.lastPathComponent.hasPrefix("wallpaper-") && f != file {
+  for f in list where f.pathExtension == "jpg" && f != file {
     if let m = (try? f.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate, m < cutoff {
       try? fm.removeItem(at: f)
     }

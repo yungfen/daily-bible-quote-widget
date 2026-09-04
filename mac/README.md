@@ -82,11 +82,12 @@ App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布
 不等網路。點選單項目後會先跳「正在挑照片並合成桌布…」的通知，換好再跳一行
 「桌布已換：出處 · 攝影師」；中間大約十秒（swift 每次都要先編譯腳本）。
 
-通知的圖示：選單列版的通知由 App 本身發出（腳本印 `NOTIFICATION:` 行，Platypus
-負責顯示），所以會帶 App 的 icon。直接在終端機跑腳本、或用無視窗版排程時，通知
-是 osascript 發的，macOS 會掛在「工序指令編寫程式」名下、圖示是捲軸，這是系統
-限制。如果選單列版點了完全沒有通知，把 `mac/menu.sh` 開頭的
-`USE_PLATYPUS_NOTIFY=1` 改成 `0` 重建 App，就退回 osascript。
+通知的圖示：只要腳本是在 Platypus 包的 .app 裡面跑（選單列版、無視窗版、排程都
+是），通知由 App 本身發出（腳本印 `NOTIFICATION:` 行，Platypus 負責顯示），會帶
+App 的 icon。直接在終端機用 `swift` 跑腳本時，通知是 osascript 發的，macOS 會掛在
+「工序指令編寫程式」名下、圖示是捲軸，這是系統限制。如果在 App 裡完全沒有通知，
+把 `mac/menu.sh` 開頭的 `USE_PLATYPUS_NOTIFY=1` 改成 `0`（無視窗版則在排程加環境
+變數 `DBW_NOTIFY=osascript`），就退回 osascript。
 
 兩個版本可以並存：無視窗版給排程用，選單列版給自己手動點。
 
@@ -98,7 +99,7 @@ Platypus 建出來的 App 只是一個資料夾，腳本放在 `Contents/Resourc
 ```bash
 cd daily-bible-quote-widget
 cp mac/menu.sh "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
-cp mac/daily-bible-wallpaper.swift "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
+cp mac/daily-bible-wallpaper.swift mac/reflections.json "/Applications/DailyBibleWallpaper.app/Contents/Resources/"
 chmod +x "/Applications/DailyBibleWallpaper.app/Contents/Resources/script"
 ```
 
@@ -140,8 +141,17 @@ SCRIPT="$PWD/mac/daily-bible-wallpaper.swift" bash mac/install-daily.sh
 - **字型。** 有安裝 Noto Serif TC 與 Cormorant Garamond 的話會與網站同款；沒裝
   就用系統的宋體（Songti TC）與 New York。想要同款可到 Google Fonts 下載安裝，
   不用改程式。
-- **檔案放在哪。** `~/Library/Application Support/DailyBibleWallpaper/`，每次
-  產生新檔名（覆蓋同一個檔案 macOS 不會刷新桌面），7 天以上的舊檔會自動清掉。
+- **檔案放在哪。** `~/圖片/Daily Bible Wallpaper/`（Pictures），每次一個新檔，
+  檔名是「日期 時間 經文出處」，預設永久保留（每張約 1 MB）。同資料夾有 `log.tsv`
+  （每換一次記一行：時間、經文、心情、攝影師、Unsplash 原圖連結）和 `index.html`
+  （每日讀經紀錄：一張圖一張卡，新的在上，離線可開）。選單列的「每日讀經紀錄」
+  「打開桌布資料夾」就是開這兩個；「回到之前的桌布」子選單列最近 15 張，點了直接
+  設回去（更早的就從資料夾把圖拖到系統設定的桌布上）。要限制保留天數，把腳本開頭的 `KEEP_DAYS` 改成
+  天數。這個資料夾是獨立的，不會碰「照片」App。
+- **反思問題。** `mac/reflections.json` 每節經文三題（靈修用），選單的「今日反思」
+  和讀經紀錄頁每張卡的「反思」都從這裡讀。改題目直接改這個檔，然後複製進 App：
+  `cp mac/reflections.json "/Applications/DailyBibleWallpaper.app/Contents/Resources/"`
+  （無視窗版同理）。
 - **沒有網路或 Unsplash 掛了**，會用暖色漸層當底圖，桌布照樣換，通知裡會註明。
 - **執行紀錄**：用 `SCRIPT=` 方式排程時寫在 `~/Library/Logs/DailyBibleWallpaper.log`；
   走 App 的話 Platypus 不會留紀錄，出錯看通知即可。
