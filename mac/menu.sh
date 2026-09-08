@@ -67,7 +67,7 @@ function buildVerseLines() {
     var rraw = $.NSString.stringWithContentsOfFileEncodingError(rp, 4, null);
     var vid = ObjC.unwrap($.NSProcessInfo.processInfo.environment.objectForKey("VERSE_ID"));
     var qs = JSON.parse(ObjC.unwrap(rraw))[vid] || [];
-    if (qs.length) { lines.push("----"); lines.push("今日反思"); qs.forEach(function (q) { wrapCjk(q, 22).forEach(function (l) { lines.push("　" + l); }); }); }
+    if (qs.length) { lines.push("----"); lines.push("今日反思"); qs.forEach(function (item) { wrapCjk(item.q, 22).forEach(function (l) { lines.push("　" + l); }); }); }
   } catch (e) {}
   return lines.join("\n");
 }

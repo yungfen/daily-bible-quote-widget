@@ -418,11 +418,18 @@ if setCount == 0 {
 if let p = photo, image != nil { triggerUnsplashDownload(p) }
 
 // ─── 反思問題：reflections.json 與腳本放在同一個資料夾（App 裡是 Contents/Resources）───
-func loadReflections() -> [String: [String]] {
+// 每題有 q（反思問題）與 more（點了之後才出現的追問，更有引導、更延伸）。
+struct Reflection { let q: String; let more: String }
+func loadReflections() -> [String: [Reflection]] {
   let scriptDir = URL(fileURLWithPath: CommandLine.arguments.first ?? ".").deletingLastPathComponent()
   for u in [scriptDir.appendingPathComponent("reflections.json"),
             URL(fileURLWithPath: fm.currentDirectoryPath).appendingPathComponent("mac/reflections.json")] {
-    if let d = try? Data(contentsOf: u), let j = try? JSONSerialization.jsonObject(with: d) as? [String: [String]] { return j }
+    guard let d = try? Data(contentsOf: u),
+          let raw = try? JSONSerialization.jsonObject(with: d) as? [String: [[String: String]]] else { continue }
+    return raw.mapValues { $0.compactMap { item in
+      guard let q = item["q"], let more = item["more"] else { return nil }
+      return Reflection(q: q, more: more)
+    } }
   }
   return [:]
 }
@@ -474,11 +481,14 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     let img = exists
       ? "<a href=\"\(htmlEsc(c[9]))\"><img loading=\"lazy\" src=\"\(htmlEsc(c[9]))\" alt=\"\"></a>"
       : "<div class=\"missing\">（圖檔已刪除）</div>"
-    let qs = (reflections[c[1]] ?? []).map { "<li>\(htmlEsc($0))</li>" }.joined()
+    let qs = (reflections[c[1]] ?? []).map {
+      "<li><button class=\"q\" type=\"button\" aria-expanded=\"false\">\(htmlEsc($0.q))</button><p class=\"more\">\(htmlEsc($0.more))</p></li>"
+    }.joined()
     let fileAttr = htmlEsc(c[9])
     let linksBlock = exists
       ? "<p class=\"links\"><a href=\"\(fileAttr)\" download>下載桌布</a><a href=\"\(fileAttr)\" target=\"_blank\">打開原圖</a></p>"
       : ""
+    // 點問題本身會展開一句更有引導、更延伸的追問（.more），不是另外點別的地方。
     let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
     cards.append("""
     <article>
@@ -524,7 +534,15 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     .en { margin: 0 0 .6rem; line-height: 1.5; font-style: italic; opacity: .85; }
     details { margin: 0 0 .7rem; font-size: .92rem; }
     summary { cursor: pointer; color: #8b7355; font-weight: 600; }
-    details ul { margin: .4rem 0 0; padding-left: 1.2rem; line-height: 1.7; }
+    details ul { list-style: none; margin: .4rem 0 0; padding: 0; }
+    details li { margin: 0 0 .3rem; }
+    .q { display: block; width: 100%; text-align: left; background: none; border: none; padding: .1rem 0;
+         margin: 0; font: inherit; color: inherit; line-height: 1.7; cursor: pointer; }
+    .q::before { content: "· "; opacity: .5; }
+    .q:hover, .q[aria-expanded="true"] { color: #8b7355; }
+    .more { display: none; margin: .1rem 0 .5rem 1.1rem; padding-left: .6rem; border-left: 2px solid #d4c5b1;
+            opacity: .8; font-size: .93em; line-height: 1.6; }
+    .more.open { display: block; }
     .credit { margin: 0; font-size: .78rem; opacity: .65; }
     .credit a { color: inherit; }
     .links { margin: .7rem 0 0; display: flex; gap: .5rem; }
@@ -536,7 +554,16 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
   <p>每次換桌布留一筆。共 \(cards.count) 筆，新的在上。圖片存在 \(htmlEsc(dir.path))</p></header>
   <main>
   \(cards.joined(separator: "\n"))
-  </main></body></html>
+  </main>
+  <script>
+  document.querySelectorAll(".q").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var open = b.nextElementSibling.classList.toggle("open");
+      b.setAttribute("aria-expanded", open ? "true" : "false");
+    });
+  });
+  </script>
+  </body></html>
   """
   try? html.write(to: dir.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
 }
