@@ -149,9 +149,10 @@ SCRIPT="$PWD/mac/daily-bible-wallpaper.swift" bash mac/install-daily.sh
   設回去（更早的就從資料夾把圖拖到系統設定的桌布上）。要限制保留天數，把腳本開頭的 `KEEP_DAYS` 改成
   天數。這個資料夾是獨立的，不會碰「照片」App。
 - **反思問題。** `mac/reflections.json` 每節經文三題（靈修用），每題是
-  `{"q": "問題", "more": "追問"}`：`q` 是選單的「今日反思」和讀經紀錄頁都會顯示的
-  題目；`more` 只在讀經紀錄頁出現——點一下 `q` 才展開，是更有引導、更延伸的追問。
-  改題目直接改這個檔，然後複製進 App：
+  `{"q": "問題", "more": "追問", "easier": "簡化版"}`：`q` 是選單的「今日反思」和
+  讀經紀錄頁都會顯示的題目；`more`／`easier` 只在讀經紀錄頁出現——每題下面有
+  「再深一點」「簡單一點」兩顆按鈕，點了才展開，分別是更有引導的追問、和問題太難時
+  換一個好答的角度。改題目直接改這個檔，然後複製進 App：
   `cp mac/reflections.json "/Applications/DailyBibleWallpaper.app/Contents/Resources/"`
   （無視窗版同理）。
 - **沒有網路或 Unsplash 掛了**，會用暖色漸層當底圖，桌布照樣換，通知裡會註明。

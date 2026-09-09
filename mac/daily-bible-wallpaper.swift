@@ -418,8 +418,9 @@ if setCount == 0 {
 if let p = photo, image != nil { triggerUnsplashDownload(p) }
 
 // ─── 反思問題：reflections.json 與腳本放在同一個資料夾（App 裡是 Contents/Resources）───
-// 每題有 q（反思問題）與 more（點了之後才出現的追問，更有引導、更延伸）。
-struct Reflection { let q: String; let more: String }
+// 每題有 q（反思問題）、more（點「再深一點」才出現的追問，更有引導、更延伸）、
+// easier（點「簡單一點」才出現，問題太難時換一個好答的角度）。
+struct Reflection { let q: String; let more: String; let easier: String }
 func loadReflections() -> [String: [Reflection]] {
   let scriptDir = URL(fileURLWithPath: CommandLine.arguments.first ?? ".").deletingLastPathComponent()
   for u in [scriptDir.appendingPathComponent("reflections.json"),
@@ -427,8 +428,8 @@ func loadReflections() -> [String: [Reflection]] {
     guard let d = try? Data(contentsOf: u),
           let raw = try? JSONSerialization.jsonObject(with: d) as? [String: [[String: String]]] else { continue }
     return raw.mapValues { $0.compactMap { item in
-      guard let q = item["q"], let more = item["more"] else { return nil }
-      return Reflection(q: q, more: more)
+      guard let q = item["q"], let more = item["more"], let easier = item["easier"] else { return nil }
+      return Reflection(q: q, more: more, easier: easier)
     } }
   }
   return [:]
@@ -482,13 +483,20 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
       ? "<a href=\"\(htmlEsc(c[9]))\"><img loading=\"lazy\" src=\"\(htmlEsc(c[9]))\" alt=\"\"></a>"
       : "<div class=\"missing\">（圖檔已刪除）</div>"
     let qs = (reflections[c[1]] ?? []).map {
-      "<li><button class=\"q\" type=\"button\" aria-expanded=\"false\">\(htmlEsc($0.q))</button><p class=\"more\">\(htmlEsc($0.more))</p></li>"
+      "<li><p class=\"qtext\">\(htmlEsc($0.q))</p>" +
+      "<div class=\"qact\">" +
+      "<button type=\"button\" data-target=\"more\" aria-expanded=\"false\">再深一點</button>" +
+      "<button type=\"button\" data-target=\"easier\" aria-expanded=\"false\">簡單一點</button>" +
+      "</div>" +
+      "<p class=\"more\">\(htmlEsc($0.more))</p>" +
+      "<p class=\"easier\">\(htmlEsc($0.easier))</p></li>"
     }.joined()
     let fileAttr = htmlEsc(c[9])
     let linksBlock = exists
       ? "<p class=\"links\"><a href=\"\(fileAttr)\" download>下載桌布</a><a href=\"\(fileAttr)\" target=\"_blank\">打開原圖</a></p>"
       : ""
-    // 點問題本身會展開一句更有引導、更延伸的追問（.more），不是另外點別的地方。
+    // 每題下面兩顆按鈕：「再深一點」展開 .more（更有引導的追問），
+    // 「簡單一點」展開 .easier（問題太難時換一個好答的角度）。
     let qBlock = qs.isEmpty ? "" : "<details><summary>反思</summary><ul>\(qs)</ul></details>"
     cards.append("""
     <article>
@@ -535,14 +543,16 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
     details { margin: 0 0 .7rem; font-size: .92rem; }
     summary { cursor: pointer; color: #8b7355; font-weight: 600; }
     details ul { list-style: none; margin: .4rem 0 0; padding: 0; }
-    details li { margin: 0 0 .3rem; }
-    .q { display: block; width: 100%; text-align: left; background: none; border: none; padding: .1rem 0;
-         margin: 0; font: inherit; color: inherit; line-height: 1.7; cursor: pointer; }
-    .q::before { content: "· "; opacity: .5; }
-    .q:hover, .q[aria-expanded="true"] { color: #8b7355; }
-    .more { display: none; margin: .1rem 0 .5rem 1.1rem; padding-left: .6rem; border-left: 2px solid #d4c5b1;
-            opacity: .8; font-size: .93em; line-height: 1.6; }
-    .more.open { display: block; }
+    details li { margin: 0 0 .6rem; }
+    .qtext { margin: 0 0 .3rem; line-height: 1.7; }
+    .qtext::before { content: "· "; opacity: .5; }
+    .qact { display: flex; gap: .4rem; margin: 0 0 .3rem; }
+    .qact button { font: inherit; font-size: .78rem; background: none; cursor: pointer;
+                   border: 1px solid #d4c5b1; border-radius: 999px; padding: .15rem .6rem; color: #8b7355; }
+    .qact button:hover, .qact button[aria-expanded="true"] { background: #8b7355; color: #fff; }
+    .more, .easier { display: none; margin: .1rem 0 .3rem 1.1rem; padding-left: .6rem;
+                      border-left: 2px solid #d4c5b1; opacity: .8; font-size: .93em; line-height: 1.6; }
+    .more.open, .easier.open { display: block; }
     .credit { margin: 0; font-size: .78rem; opacity: .65; }
     .credit a { color: inherit; }
     .links { margin: .7rem 0 0; display: flex; gap: .5rem; }
@@ -556,9 +566,10 @@ if let logText = try? String(contentsOf: logURL, encoding: .utf8) {
   \(cards.joined(separator: "\n"))
   </main>
   <script>
-  document.querySelectorAll(".q").forEach(function (b) {
+  document.querySelectorAll(".qact button").forEach(function (b) {
     b.addEventListener("click", function () {
-      var open = b.nextElementSibling.classList.toggle("open");
+      var block = b.closest("li").querySelector("." + b.dataset.target);
+      var open = block.classList.toggle("open");
       b.setAttribute("aria-expanded", open ? "true" : "false");
     });
   });
