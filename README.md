@@ -1,17 +1,18 @@
 # Daily Bible Quote Widget for Notion
 
-A bilingual widget that displays daily Bible verses in English (KJV) and Traditional Chinese (CUV), designed to embed in Notion pages.
+A bilingual widget that displays daily Bible verses in English (KJV) and Traditional Chinese (Chinese Contemporary Bible, 當代譯本), designed to embed in Notion pages.
 
 ## Features
 
 - Daily rotating Bible verses (30 curated verses)
-- Bilingual: English KJV + Traditional Chinese CUV (和合本)
+- Bilingual: English KJV + Traditional Chinese Contemporary Bible (當代譯本)
 - Light / Dark theme toggle
 - 5 font style options
 - Copy individual verses to clipboard
 - Share as image sized for Instagram Stories (9:16) or feed posts (1:1)
 - Download the verse as a phone / tablet / laptop wallpaper over a CC-licensed Unsplash photo
 - Wallpaper backgrounds match the verse's theme (per-verse keywords), with a mood picker (寧靜 / 自然 / 天空 / 光 / 山岳) to override
+- Wallpaper source picker: Unsplash photo, or a public-domain painting by J. M. W. Turner or Caspar David Friedrich (Wikidata + Wikimedia Commons, no key needed)
 - Responsive layout (side-by-side on desktop, stacked on mobile)
 - Persistent caching (localStorage) to reduce API calls
 - Auto-updates at midnight
@@ -82,12 +83,33 @@ cp .env.example .env
 npx netlify dev
 ```
 
+#### Painting backgrounds (Turner / Friedrich)
+
+No setup. The browser asks the Wikidata Query Service for the artist's
+paintings that have a Wikimedia Commons image, caches that list in
+localStorage for 30 days, and loads sized thumbnails from Commons (CORS-enabled,
+so the canvas can still be exported). The painting, artist and year are shown
+under the preview with a link to the Commons file page, and baked into the
+wallpaper. Both painters died before 1851, so the works are in the public
+domain. If Wikidata or Commons can't be reached, the wallpaper falls back to
+the gradient and says why.
+
+## Scripture copyright
+
+- **KJV**: public domain.
+- **當代譯本 (Chinese Contemporary Bible, Traditional)**: © Biblica, Inc.®,
+  served through api.bible under its license. The page footer carries the
+  notice, and wallpapers name the translation after each reference. If you
+  switch to another translation, update the notice in `index.html` and the
+  labels in `assets/js/app.min.js`.
+
 ## Tech Stack
 
 - Vanilla HTML / CSS / JS (no build step)
 - Netlify Functions (serverless, Node.js)
 - [api.bible](https://scripture.api.bible/) for verse data
 - [Unsplash API](https://unsplash.com/developers) for wallpaper backgrounds (optional)
+- [Wikidata Query Service](https://query.wikidata.org/) + [Wikimedia Commons](https://commons.wikimedia.org/) for painting backgrounds
 - [html2canvas](https://html2canvas.hertzen.com/) for image sharing; Canvas 2D for wallpapers
 
 ## API Usage
