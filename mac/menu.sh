@@ -70,6 +70,8 @@ if [ $# -eq 0 ]; then
   print_verse_lines
   echo "----"
   echo "換一張桌布（依經文）"
+  echo "透納名畫"
+  echo "弗里德里希名畫"
   echo "----"
   echo "寧靜"
   echo "自然"
@@ -77,9 +79,6 @@ if [ $# -eq 0 ]; then
   echo "光"
   echo "山岳"
   echo "隨機心情"
-  echo "----"
-  echo "透納名畫"
-  echo "弗里德里希名畫"
   exit 0
 fi
 
