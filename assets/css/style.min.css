@@ -54,3 +54,5 @@
 .coach-bubble .coach-skip:hover{color:var(--text-color)}
 .coach-bubble .coach-next{background:var(--reference-color);color:#fff;border:none;border-radius:8px;font-size:.75rem;padding:.42rem .9rem;cursor:pointer}
 .coach-bubble .coach-next:hover{filter:brightness(1.08)}
+.wp-sources{margin-top:.5rem}
+.translation-note{margin-top:.75rem;font-size:.65rem;line-height:1.5;color:var(--date-color);text-align:center;opacity:.8}
