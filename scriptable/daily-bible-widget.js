@@ -61,7 +61,8 @@ const C = {
 // Verse content is immutable per id, so once cached it never needs
 // refreshing — this keeps API calls near zero as the widget reloads.
 const fm = FileManager.local();
-const cacheDir = fm.joinPath(fm.cacheDirectory(), "daily-bible-widget");
+// "-v2": the server now strips psalm headings, so verses cached before that are dropped.
+const cacheDir = fm.joinPath(fm.cacheDirectory(), "daily-bible-widget-v2");
 if (!fm.fileExists(cacheDir)) fm.createDirectory(cacheDir, true);
 
 function cachePath(verseId) {

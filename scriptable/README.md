@@ -78,7 +78,7 @@ Shuffle）＋相簿**（iOS 17.1 以上）。`daily-bible-wallpaper.js` 每天�
 4. **捷徑 App** → 新增捷徑：
    - 動作一：Scriptable「Run Script」→ 選 Daily Bible Wallpaper，**Run In App 關掉**
      （想指定心情可在「Parameter」填 `calm`、`nature`、`sky`、`light`、`mountains`
-     或 `random`，不填就依經文）。
+     或 `random`，不填就依經文；想用名畫就填 `turner`、`friedrich` 或 `painting`）。
    - 動作二：照片「儲存到相簿」→ 相簿選「每日聖經金句」，輸入用上一步的 Script Result。
    - 命名「每日桌布」，跑一次確認相簿裡多了一張。
 5. **捷徑 → 自動化** → 新增個人自動化 → 時間 → 每天 06:00 → 執行「每日桌布」
@@ -93,5 +93,6 @@ Shuffle）＋相簿**（iOS 17.1 以上）。`daily-bible-wallpaper.js` 每天�
 - 相簿會越來越多張，輪播是在整個相簿裡挑，想「只看今天的」就定期清舊圖，
   或把輪播頻率設「每天」讓它照順序輪。
 - 拿不到照片（沒網路、Unsplash 掛了）會用漸層底圖並發通知說明，桌布照樣換。
+- 名畫來自 Wikidata 與 Wikimedia Commons（公共領域，不需要金鑰），畫作清單在手機上快取 30 天。
 - 字型：iOS 內建的 Georgia 與宋體（Songti TC），與網站的氣質一致。
 - 每天只呼叫 Unsplash 兩次（取照片、回報使用），不會碰到配額。

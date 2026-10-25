@@ -77,6 +77,9 @@ if [ $# -eq 0 ]; then
   echo "光"
   echo "山岳"
   echo "隨機心情"
+  echo "----"
+  echo "透納名畫"
+  echo "弗里德里希名畫"
   exit 0
 fi
 
@@ -96,6 +99,8 @@ case "$1" in
   光) MOOD="light"; LABEL="光" ;;
   山岳) MOOD="mountains"; LABEL="山岳" ;;
   隨機心情) MOOD="random"; LABEL="隨機心情" ;;
+  透納名畫) MOOD="turner"; LABEL="透納名畫" ;;
+  弗里德里希名畫) MOOD="friedrich"; LABEL="弗里德里希名畫" ;;
   *) exit 0 ;;   # verse lines and anything unknown: do nothing
 esac
 

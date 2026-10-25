@@ -1,7 +1,8 @@
 #!/usr/bin/env swift
 // Daily Bible Wallpaper — macOS
 //
-// 把「每日聖經金句」當天的經文（KJV + 當代譯本）合成到一張 Unsplash 照片上，
+// 把「每日聖經金句」當天的經文（KJV + 當代譯本）合成到一張 Unsplash 照片
+// （或 Turner、Friedrich 的公共領域名畫）上，
 // 存成 JPEG，然後設成每一個螢幕的桌布。呼叫的是網站同一組 Netlify function，
 // 所以經文跟網站、Scriptable widget 同一天一定相同。
 //
@@ -9,6 +10,7 @@
 //   swift daily-bible-wallpaper.swift            # 依經文主題選照片（預設）
 //   swift daily-bible-wallpaper.swift calm       # 指定心情：calm | nature | sky | light | mountains
 //   swift daily-bible-wallpaper.swift random     # 隨機挑一種心情
+//   swift daily-bible-wallpaper.swift turner     # 改用名畫：turner | friedrich | painting（兩位隨機）
 //
 // 需求：macOS 12 以上，Xcode Command Line Tools（提供 /usr/bin/swift）。
 // 沒有 Unsplash 金鑰或網路不通時，退回漸層底圖，桌布照樣會換。
@@ -84,7 +86,8 @@ func notify(_ title: String, _ body: String) {
 func httpGet(_ urlString: String, timeout: TimeInterval = 25) -> Data? {
   guard let url = URL(string: urlString) else { return nil }
   var req = URLRequest(url: url, timeoutInterval: timeout)
-  req.setValue("\(APP_NAME)/1.0", forHTTPHeaderField: "User-Agent")
+  // Wikimedia asks API clients for a descriptive User-Agent with a contact URL.
+  req.setValue("DailyBibleWallpaper/1.0 (https://github.com/yungfen/daily-bible-quote-widget)", forHTTPHeaderField: "User-Agent")
   let sem = DispatchSemaphore(value: 0)
   var result: Data? = nil
   URLSession.shared.dataTask(with: req) { data, resp, err in
@@ -169,6 +172,91 @@ func downloadImage(_ photo: Photo, w: Int, h: Int) -> NSImage? {
 /// Unsplash API 規範：照片真的被使用時要打一次 download 端點。
 func triggerUnsplashDownload(_ photo: Photo) {
   _ = httpGet("\(SITE_BASE_URL)/.netlify/functions/get-unsplash-photo?action=download&id=\(photo.id)", timeout: 10)
+}
+
+// ─── 名畫 ─────────────────────────────────────────────────────────────
+// 與網站同一個來源：Wikidata 列出畫家有 Wikimedia Commons 圖檔的畫作，
+// Commons 給指定寬度的縮圖。不需要金鑰。畫作清單快取 30 天。
+let ARTISTS: [String: (names: [String], display: String, zh: String)] = [
+  "turner": (["J. M. W. Turner", "Joseph Mallord William Turner"], "J. M. W. Turner", "透納"),
+  "friedrich": (["Caspar David Friedrich"], "Caspar David Friedrich", "弗里德里希"),
+]
+// 不適合放在經文後面的題材。
+let artAvoid = try! NSRegularExpression(
+  pattern: "slave|massacre|plague|death|dead|corpse|execution|grave|cemetery|coffin|funeral|burial",
+  options: .caseInsensitive)
+
+struct Painting {
+  var title: String
+  var year: String
+  var file: String
+}
+
+func artCatalogue(_ artist: String) -> [Painting] {
+  let fm = FileManager.default
+  let dir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+    .appendingPathComponent("DailyBibleWallpaper", isDirectory: true)
+  let cache = dir.appendingPathComponent("art-\(artist).json")
+  if let m = (try? fm.attributesOfItem(atPath: cache.path))?[.modificationDate] as? Date,
+    Date().timeIntervalSince(m) < 30 * 86400,
+    let data = try? Data(contentsOf: cache),
+    let rows = (try? JSONSerialization.jsonObject(with: data)) as? [[String: String]], !rows.isEmpty {
+    return rows.map { Painting(title: $0["title"] ?? "", year: $0["year"] ?? "", file: $0["file"] ?? "") }
+  }
+  guard let a = ARTISTS[artist] else { return [] }
+  let names = a.names.map { "\"\($0)\"@en" }.joined(separator: " ")
+  let sparql = "SELECT ?item ?en ?image ?inc WHERE { VALUES ?name { \(names) } ?artist rdfs:label ?name ; wdt:P31 wd:Q5 . "
+    + "?item wdt:P170 ?artist ; wdt:P31 wd:Q3305213 ; wdt:P18 ?image . "
+    + "OPTIONAL { ?item rdfs:label ?en . FILTER(LANG(?en) = \"en\") } OPTIONAL { ?item wdt:P571 ?inc } } LIMIT 2000"
+  let q = sparql.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+  guard let data = httpGet("https://query.wikidata.org/sparql?format=json&query=\(q)", timeout: 40),
+    let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+    let bindings = (json["results"] as? [String: Any])?["bindings"] as? [[String: Any]]
+  else { return [] }
+  func val(_ b: [String: Any], _ k: String) -> String? { (b[k] as? [String: Any])?["value"] as? String }
+  var seen = Set<String>()
+  var list: [Painting] = []
+  for b in bindings {
+    guard let item = val(b, "item"), let image = val(b, "image"), !seen.contains(item) else { continue }
+    let en = val(b, "en") ?? ""
+    if artAvoid.firstMatch(in: en, range: NSRange(en.startIndex..., in: en)) != nil { continue }
+    seen.insert(item)
+    let raw = image.components(separatedBy: "/Special:FilePath/").last ?? ""
+    let y = String((val(b, "inc") ?? "").prefix(4))
+    let year = (y.count == 4 && y.allSatisfy({ $0.isNumber })) ? y : ""
+    list.append(Painting(title: en, year: year, file: raw.removingPercentEncoding ?? raw))
+  }
+  if !list.isEmpty {
+    try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
+    let rows = list.map { ["title": $0.title, "year": $0.year, "file": $0.file] }
+    if let d = try? JSONSerialization.data(withJSONObject: rows) { try? d.write(to: cache) }
+  }
+  return list
+}
+
+/// 回傳 (圖, 烙在圖上的署名, 畫名, 失敗原因)。最多試三張畫：Commons 偶爾某張縮圖很慢；
+/// 第一張用 `width`，之後退到 1920（最常被快取的尺寸）。
+func fetchPainting(_ artist: String, width: Int) -> (NSImage?, String, String, String) {
+  let list = artCatalogue(artist)
+  if list.isEmpty { return (nil, "", "", "名畫圖庫暫時連不上，改用漸層底圖") }
+  let display = ARTISTS[artist]?.display ?? artist
+  for attempt in 0..<3 {
+    guard let a = list.randomElement() else { break }
+    let w = attempt == 0 ? width : 1920
+    let t = "File:\(a.file)".addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+    guard let data = httpGet("https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo&iiprop=url&iiurlwidth=\(w)&titles=\(t)", timeout: 20),
+      let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+      let pages = (json["query"] as? [String: Any])?["pages"] as? [String: Any],
+      let ii = pages.values.compactMap({ (($0 as? [String: Any])?["imageinfo"] as? [[String: Any]])?.first }).first,
+      let url = (ii["thumburl"] as? String) ?? (ii["url"] as? String),
+      let imgData = httpGet(url, timeout: 60), let img = NSImage(data: imgData)
+    else { log("名畫第 \(attempt + 1) 張載入失敗，換一張"); continue }
+    var title = a.title.isEmpty ? "Untitled" : a.title
+    if title.count > 60 { title = String(title.prefix(57)) + "…" }
+    log("名畫：\(display)《\(title)》")
+    return (img, "Painting: \(display), \(title)" + (a.year.isEmpty ? "" : " (\(a.year))"), title, "")
+  }
+  return (nil, "", "", "名畫圖檔載入失敗，改用漸層底圖")
 }
 
 // ─── 合成 ─────────────────────────────────────────────────────────────
@@ -262,9 +350,9 @@ func compose(verse: Verse, photo: NSImage?, credit: String?, w: Int, h: Int) -> 
 
   enum Item { case text(NSAttributedString, CGFloat); case gap(CGFloat, divider: Bool) }
   let enQ = styled("\u{201C}\(verse.enQuote)\u{201D}", enFont, alpha: 1, lineHeight: 1.42)
-  let enR = styled("\u{2014} \(verse.enRef)", refFont, alpha: 0.85, lineHeight: 1.6)
+  let enR = styled("\u{2014} \(verse.enRef) (KJV)", refFont, alpha: 0.85, lineHeight: 1.6)
   let zhQ = styled("「\(verse.zhQuote)」", zhFont, alpha: 1, lineHeight: 1.62)
-  let zhR = styled("\u{2014} \(verse.zhRef)", refFont, alpha: 0.85, lineHeight: 1.6)
+  let zhR = styled("\u{2014} \(verse.zhRef)（當代譯本）", refFont, alpha: 0.85, lineHeight: 1.6)
   func height(_ s: NSAttributedString) -> CGFloat { s.boundingRect(with: measure, options: opts).height.rounded(.up) }
   let items: [Item] = [
     .text(enQ, height(enQ)), .gap(gap * 0.5, divider: false), .text(enR, height(enR)),
@@ -297,12 +385,12 @@ func compose(verse: Verse, photo: NSImage?, credit: String?, w: Int, h: Int) -> 
     }
   }
 
-  // 浮水印與攝影師署名（UI 之外的署名照 Unsplash 規範直接烙在圖上）。
+  // 浮水印與署名（Unsplash 攝影師或名畫出處，直接烙在圖上）。
   let wm = styled("每日聖經金句 ✦ Daily Bible Quote", smallFont, alpha: 0.82, lineHeight: 1)
   let wmSize = wm.size()
   wm.draw(at: NSPoint(x: (W - wmSize.width) / 2, y: minSide * 0.055))
   if let credit = credit {
-    let cr = styled("Photo: \(credit) / Unsplash", smallFont, alpha: 0.68, lineHeight: 1, align: .left)
+    let cr = styled(credit, smallFont, alpha: 0.68, lineHeight: 1, align: .left)
     cr.draw(at: NSPoint(x: minSide * 0.05, y: minSide * 0.025))
   }
 
@@ -334,12 +422,18 @@ if modeArg == "--verse" {
 
 var query = themes[id] ?? defaultQuery
 var moodLabel = "依經文"
+var artist: String? = ARTISTS[modeArg] != nil ? modeArg : nil
+if modeArg == "painting" { artist = ARTISTS.keys.randomElement() }
 if modeArg == "random", let m = moods.keys.randomElement() {
   query = moods[m]!; moodLabel = m
 } else if let q = moods[modeArg] {
   query = q; moodLabel = modeArg
 }
-log("經文 \(id)，照片主題「\(query)」（\(moodLabel)）")
+if let a = artist {
+  log("經文 \(id)，\(ARTISTS[a]?.zh ?? a)名畫")
+} else {
+  log("經文 \(id)，照片主題「\(query)」（\(moodLabel)）")
+}
 
 // 螢幕：以像素最多的那個為準，其他螢幕由系統等比縮放。
 let screens = NSScreen.screens
@@ -353,17 +447,26 @@ log("桌布尺寸 \(pxW)×\(pxH)，螢幕數 \(screens.count)")
 let (verse, verseIsFallback) = fetchVerse(id)
 if verseIsFallback { log("取不到今天的經文，先用內建備用經文") }
 
-let (photo, photoReason) = fetchPhoto(query: query)
+var photo: Photo? = nil
 var image: NSImage? = nil
-var reason = photoReason
-if let p = photo {
-  log("照片 \(p.id) by \(p.photographer)，下載中…")
-  image = downloadImage(p, w: pxW, h: pxH)
-  if image == nil { reason = "照片下載失敗，改用漸層底圖" }
+var reason = ""
+var creditLine: String? = nil
+var paintingTitle = ""
+if let a = artist {
+  let r = fetchPainting(a, width: pxW > 1920 ? 3840 : 1920)
+  image = r.0; creditLine = r.1; paintingTitle = r.2; reason = r.3
+} else {
+  let (p, photoReason) = fetchPhoto(query: query)
+  photo = p; reason = photoReason
+  if let p = p {
+    log("照片 \(p.id) by \(p.photographer)，下載中…")
+    image = downloadImage(p, w: pxW, h: pxH)
+    if image == nil { reason = "照片下載失敗，改用漸層底圖" } else { creditLine = "Photo: \(p.photographer) / Unsplash" }
+  }
 }
 if !reason.isEmpty { log(reason) }
 
-guard let jpeg = compose(verse: verse, photo: image, credit: image == nil ? nil : photo?.photographer, w: pxW, h: pxH) else {
+guard let jpeg = compose(verse: verse, photo: image, credit: image == nil ? nil : creditLine, w: pxW, h: pxH) else {
   log("合成失敗")
   notify("桌布沒有更動", "合成圖片失敗。")
   exit(1)
@@ -432,7 +535,9 @@ let moodText: String = {
 }()
 var title = "桌布已換：\(verse.zhRef)"
 var body: String
-if let p = photo, image != nil {
+if let a = artist, image != nil {
+  body = "\(ARTISTS[a]?.zh ?? a)名畫《\(paintingTitle)》"
+} else if let p = photo, image != nil {
   body = "\(moodText)的照片 · 攝影 \(p.photographer)"
 } else {
   body = "沒有照片，用漸層底圖：\(reason.isEmpty ? "未知原因" : reason)"

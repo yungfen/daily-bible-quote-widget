@@ -131,12 +131,34 @@ exports.handler = async function (event, context) {
         .trim();
     }
 
+    // 當代譯本 sometimes returns the psalm number and section heading inside
+    // the verse text even with include-titles=false, e.g.
+    // "第27篇 讚美的禱告 耶和華是我的光，…". Verse text always carries
+    // punctuation; headings are short and have none.
+    const PUNCT = /[，。？！；：、「」『』（）…—,.;:?!]/;
+    function stripHeadings(text) {
+      const lines = String(text || '').split(/\n+/).map((l) => l.trim()).filter(Boolean);
+      while (lines.length > 1 && lines[0].length <= 16 && !PUNCT.test(lines[0])) lines.shift();
+      let t = cleanContent(lines.join(' '));
+      const psalm = /^第\s*[0-9０-９一二三四五六七八九十百零〇]+\s*篇\s*/;
+      const hadPsalm = psalm.test(t);
+      t = t.replace(psalm, '');
+      for (let i = 0; i < 2; i++) {
+        const m = /^(\S{1,16})\s+(?=\S)/.exec(t);
+        if (!m || PUNCT.test(m[1]) || /[A-Za-z0-9]/.test(m[1])) break;
+        t = t.slice(m[0].length);
+      }
+      // Psalm superscription right after the psalm number, e.g. 「大衛的詩。」
+      if (hadPsalm) t = t.replace(/^[^。]{0,30}(的詩|交給樂長|訓誨詩|金詩|上行之詩)[^。]{0,30}。\s*/, '');
+      return t;
+    }
+
     const result = {
       english: englishData
         ? { quote: cleanContent(englishData.data.content), reference: englishData.data.reference }
         : fallback.english,
       chinese: chineseData
-        ? { quote: cleanContent(chineseData.data.content), reference: chineseData.data.reference }
+        ? { quote: stripHeadings(chineseData.data.content), reference: chineseData.data.reference }
         : fallback.chinese,
     };
 
