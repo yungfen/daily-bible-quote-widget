@@ -37,6 +37,7 @@ swift mac/daily-bible-wallpaper.swift
 ```bash
 swift mac/daily-bible-wallpaper.swift calm        # calm | nature | sky | light | mountains
 swift mac/daily-bible-wallpaper.swift random      # 隨機挑一種心情
+swift mac/daily-bible-wallpaper.swift turner      # 改用名畫：turner | friedrich | painting（兩位隨機）
 ```
 
 不加參數就依當天經文的主題選照片，跟網站「依經文」相同。
@@ -68,7 +69,7 @@ swift mac/daily-bible-wallpaper.swift random      # 隨機挑一種心情
 
 用 `mac/DailyBibleWallpaperMenu.platypus` 取代上面的設定檔，其他步驟相同。做出來的
 App 常駐在右上角選單列，顯示一個 ✝，下拉有「換一張桌布（依經文）」與五種心情、
-「隨機心情」，點一下就換。手動設定的話：Interface 選 **Status Menu**、Script Path
+「隨機心情」，以及「透納名畫」「弗里德里希名畫」，點一下就換。手動設定的話：Interface 選 **Status Menu**、Script Path
 指到 `mac/menu.sh`（Script Type 選 Shell）、**Bundled Files** 加入
 `mac/daily-bible-wallpaper.swift`、勾 Remain running after execution。
 
@@ -143,6 +144,9 @@ SCRIPT="$PWD/mac/daily-bible-wallpaper.swift" bash mac/install-daily.sh
 - **檔案放在哪。** `~/Library/Application Support/DailyBibleWallpaper/`，每次
   產生新檔名（覆蓋同一個檔案 macOS 不會刷新桌面），7 天以上的舊檔會自動清掉。
 - **沒有網路或 Unsplash 掛了**，會用暖色漸層當底圖，桌布照樣換，通知裡會註明。
+- **名畫**來自 Wikidata 與 Wikimedia Commons（公共領域，不需要金鑰），畫作清單快取在
+  `~/Library/Application Support/DailyBibleWallpaper/art-*.json`，30 天更新一次。某張畫
+  載不下來會自動換一張，最多三次，再不行就用漸層底圖並在通知說明。
 - **執行紀錄**：用 `SCRIPT=` 方式排程時寫在 `~/Library/Logs/DailyBibleWallpaper.log`；
   走 App 的話 Platypus 不會留紀錄，出錯看通知即可。
 - 網站的 Unsplash 金鑰若是 demo 等級，每小時只有 50 次呼叫，這個 App 每天只用

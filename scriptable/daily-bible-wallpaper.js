@@ -1,6 +1,7 @@
 // Daily Bible Wallpaper — iPhone / iPad (Scriptable)
 //
-// Composites today's verse (KJV + 當代譯本) over a themed Unsplash photo at
+// Composites today's verse (KJV + 當代譯本) over a themed Unsplash photo (or a
+// public-domain Turner / Friedrich painting) at
 // the device's screen resolution and hands the image to Shortcuts, which saves
 // it into a Photos album. Set the Lock Screen to Photo Shuffle → that album →
 // Daily, and the wallpaper changes by itself every morning. iOS gives no API
@@ -18,6 +19,8 @@
 //
 // Optional argument from Shortcuts (Text input): a mood —
 //   calm | nature | sky | light | mountains | random   (default: by verse)
+// or a public-domain painting instead of a photo —
+//   turner | friedrich | painting (either painter)
 
 const SITE_BASE_URL = "https://daily-bible-quote-widget.netlify.app";
 const ALBUM_HINT = "每日聖經金句";
@@ -53,6 +56,15 @@ const MOODS = {
   mountains: "mountains alpine peaks"
 };
 const DEFAULT_QUERY = "landscape,nature,minimal,sky";
+
+// Paintings: same source as the site — Wikidata lists the painter's works that
+// have a Wikimedia Commons image; Commons serves a sized thumbnail. No key.
+const ARTISTS = {
+  turner: { names: ["J. M. W. Turner", "Joseph Mallord William Turner"], display: "J. M. W. Turner" },
+  friedrich: { names: ["Caspar David Friedrich"], display: "Caspar David Friedrich" }
+};
+const ART_AVOID = /slave|massacre|plague|death|dead|corpse|execution|grave|cemetery|coffin|funeral|burial/i;
+const UA = "DailyBibleWallpaper/1.0 (https://github.com/yungfen/daily-bible-quote-widget)";
 
 const FALLBACK_VERSE = {
   english: {
@@ -103,6 +115,57 @@ async function fetchPhoto(query) {
     }
   } catch (e) { /* fall through */ }
   return { reason: "Unsplash 暫時無法使用" };
+}
+// Painter's catalogue [{ en, year, file }], cached on device for 30 days.
+async function artCatalogue(artist) {
+  const fm = FileManager.local();
+  const path = fm.joinPath(fm.cacheDirectory(), `daily-bible-art-${artist}.json`);
+  if (fm.fileExists(path) && Date.now() - fm.modificationDate(path).getTime() < 30 * 864e5) {
+    try { const c = JSON.parse(fm.readString(path)); if (c.length) return c; } catch (e) { /* refetch */ }
+  }
+  const names = ARTISTS[artist].names.map(n => `"${n}"@en`).join(" ");
+  const sparql = `SELECT ?item ?en ?image ?inc WHERE { VALUES ?name { ${names} } ?artist rdfs:label ?name ; wdt:P31 wd:Q5 .` +
+    ` ?item wdt:P170 ?artist ; wdt:P31 wd:Q3305213 ; wdt:P18 ?image .` +
+    ` OPTIONAL { ?item rdfs:label ?en . FILTER(LANG(?en) = "en") } OPTIONAL { ?item wdt:P571 ?inc } } LIMIT 2000`;
+  const req = new Request("https://query.wikidata.org/sparql?format=json&query=" + encodeURIComponent(sparql));
+  req.headers = { "User-Agent": UA };
+  req.timeoutInterval = 30;
+  const rows = (await req.loadJSON()).results.bindings, seen = {}, list = [];
+  for (const b of rows) {
+    const qid = b.item.value.split("/").pop(), en = b.en ? b.en.value : "";
+    if (seen[qid] || ART_AVOID.test(en)) continue;
+    seen[qid] = true;
+    const year = b.inc && /^(\d{4})/.exec(b.inc.value);
+    list.push({ en, year: year ? year[1] : "", file: decodeURIComponent(b.image.value.split("/Special:FilePath/").pop()) });
+  }
+  if (list.length) fm.writeString(path, JSON.stringify(list));
+  return list;
+}
+// Returns { img, credit } or { reason }. Tries up to 3 paintings, since a
+// Commons thumbnail can occasionally be slow or missing.
+async function fetchPainting(artist) {
+  let list;
+  try { list = await artCatalogue(artist); } catch (e) { return { reason: "名畫圖庫暫時連不上" }; }
+  if (!list.length) return { reason: "名畫圖庫暫時連不上" };
+  for (let i = 0; i < 3; i++) {
+    const a = list[Math.floor(Math.random() * list.length)];
+    try {
+      const info = new Request("https://commons.wikimedia.org/w/api.php?action=query&format=json&prop=imageinfo" +
+        "&iiprop=url&iiurlwidth=1920&titles=" + encodeURIComponent("File:" + a.file));
+      info.headers = { "User-Agent": UA };
+      info.timeoutInterval = 15;
+      const pages = ((await info.loadJSON()).query || {}).pages || {};
+      const ii = Object.values(pages).map(p => p.imageinfo && p.imageinfo[0]).find(Boolean);
+      if (!ii) continue;
+      const imgReq = new Request(ii.thumburl || ii.url);
+      imgReq.headers = { "User-Agent": UA };
+      imgReq.timeoutInterval = 30;
+      const img = await imgReq.loadImage();
+      const title = a.en.length > 60 ? a.en.slice(0, 57) + "…" : a.en;
+      return { img, credit: `Painting: ${ARTISTS[artist].display}, ${title || "Untitled"}${a.year ? ` (${a.year})` : ""}` };
+    } catch (e) { /* next painting */ }
+  }
+  return { reason: "名畫圖檔載入失敗" };
 }
 async function loadPhoto(photo, pxH) {
   const sep = photo.imageBaseUrl.indexOf("?") >= 0 ? "&" : "?";
@@ -169,7 +232,7 @@ function compose(verse, img, credit, W, H) {
   ctx.drawTextInRect(enText, new Rect(x, y, maxW, enH)); y += enH + gap * 0.5;
   ctx.setTextColor(new Color("#ffffff", 0.85));
   ctx.setFont(new Font("Georgia", refSize));
-  ctx.drawTextInRect("— " + verse.english.reference, new Rect(x, y, maxW, refH)); y += refH + gap * 1.1;
+  ctx.drawTextInRect("— " + verse.english.reference + " (KJV)", new Rect(x, y, maxW, refH)); y += refH + gap * 1.1;
   ctx.setFillColor(new Color("#ffffff", 0.5));
   ctx.fillRect(new Rect(W / 2 - min * 0.05, y - gap * 0.55, min * 0.1, Math.max(1, min * 0.0015)));
   ctx.setTextColor(new Color("#ffffff"));
@@ -177,7 +240,7 @@ function compose(verse, img, credit, W, H) {
   ctx.drawTextInRect(zhText, new Rect(x, y, maxW, zhH)); y += zhH + gap * 0.5;
   ctx.setTextColor(new Color("#ffffff", 0.85));
   ctx.setFont(new Font("Georgia", refSize));
-  ctx.drawTextInRect("— " + verse.chinese.reference, new Rect(x, y, maxW, refH));
+  ctx.drawTextInRect("— " + verse.chinese.reference + "（當代譯本）", new Rect(x, y, maxW, refH));
 
   const smallSize = Math.round(min * 0.02);
   ctx.setFont(new Font("Georgia", smallSize));
@@ -187,7 +250,7 @@ function compose(verse, img, credit, W, H) {
     ctx.setTextAlignedLeft();
     ctx.setFont(new Font("Georgia", Math.round(min * 0.016)));
     ctx.setTextColor(new Color("#ffffff", 0.68));
-    ctx.drawTextInRect("Photo: " + credit + " / Unsplash", new Rect(min * 0.05, H - min * 0.038, W, smallSize * 1.4));
+    ctx.drawTextInRect(credit, new Rect(min * 0.05, H - min * 0.038, W, smallSize * 1.4));
   }
   return ctx.getImage();
 }
@@ -203,13 +266,22 @@ const res = Device.screenResolution(); // pixels
 const W = Math.round(res.width), H = Math.round(res.height);
 
 const verse = await fetchVerse(verseId);
-const photo = await fetchPhoto(query);
-let img = null, note = photo.reason || "";
-if (!photo.reason) {
-  try { img = await loadPhoto(photo, H); } catch (e) { note = "照片下載失敗"; }
+let artist = ARTISTS[mood] ? mood : null;
+if (mood === "painting") { const k = Object.keys(ARTISTS); artist = k[Math.floor(Math.random() * k.length)]; }
+let img = null, note = "", credit = null, photo = null;
+if (artist) {
+  const p = await fetchPainting(artist);
+  if (p.img) { img = p.img; credit = p.credit; } else note = p.reason;
+} else {
+  photo = await fetchPhoto(query);
+  note = photo.reason || "";
+  if (!photo.reason) {
+    try { img = await loadPhoto(photo, H); credit = "Photo: " + photo.photographer + " / Unsplash"; }
+    catch (e) { note = "照片下載失敗"; }
+  }
 }
-const out = compose(verse, img, img ? photo.photographer : null, W, H);
-if (img) reportDownload(photo);
+const out = compose(verse, img, img ? credit : null, W, H);
+if (img && photo) reportDownload(photo);
 
 if (config.runsInApp) {
   // Manual run inside Scriptable: preview, then offer to save.
