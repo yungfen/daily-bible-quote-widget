@@ -43,6 +43,7 @@
 	<key>BundledFiles</key>
 	<array>
 		<string>daily-bible-wallpaper.swift</string>
+		<string>reflections.json</string>
 	</array>
 	<key>InterpreterArgs</key>
 	<array/>
